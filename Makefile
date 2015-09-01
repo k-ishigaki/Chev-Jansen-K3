@@ -1,20 +1,23 @@
 include vars.mk
 
+# タスクターゲット
+.PHONY:	all clean
+
 # symbolic targets:
-all:	main.hex
+all: $(BUILDDIR) $(DEPENDS) $(BUILDDIR)/$(PROGRAM).hex
 
-.c.o:
-	$(COMPILE) -c $< -o $@
+$(BUILDDIR)/%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-.S.o:
-	$(COMPILE) -x assembler-with-cpp -c $< -o $@
+# .S.o:
+# 	$(COMPILE) -x assembler-with-cpp -c $< -o $@
 # "-x assembler-with-cpp" should not be necessary since this is the default
 # file type for the .S (with capital S) extension. However, upper case
 # characters are not always preserved on Windows. To ensure WinAVR
 # compatibility define the file type manually.
 
-.c.s:
-	$(COMPILE) -S $< -o $@
+# .c.s:
+# 	$(COMPILE) -S $< -o $@
 
 flash:	all
 	$(AVRDUDE) -U flash:w:main.hex:i
@@ -30,16 +33,17 @@ load: all
 	bootloadHID main.hex
 
 clean:
-	$(RM) main.hex main.elf $(OBJECTS)
+	$(RMDIR) $(BUILDDIR)
 
 # file targets:
-main.elf: $(OBJECTS)
-	$(COMPILE) -o main.elf $(OBJECTS)
+$(BUILDDIR)/$(PROGRAM).elf: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $@ $(OBJECTS)
+	# $(COMPILE) -o $@ $(OBJECTS)
 
-main.hex: main.elf
-	$(RM) main.hex
-	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
-	avr-size --format=avr --mcu=$(DEVICE) main.elf
+$(BUILDDIR)/$(PROGRAM).hex: $(BUILDDIR)/$(PROGRAM).elf
+	$(RM) $@
+	$(OBJCOPY) -j .text -j .data -O ihex $< $@
+	$(SIZE) --format=avr --mcu=$(DEVICE) $<
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 
@@ -49,3 +53,9 @@ disasm:	main.elf
 
 cpp:
 	$(COMPILE) -E main.c
+
+$(BUILDDIR):
+	$(MKDIR) $(BUILDDIR)
+
+$(BUILDDIR)/%.d: %.c
+	$(CC) -MM $(CFLAGS) $< > $@

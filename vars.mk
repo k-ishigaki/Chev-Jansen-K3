@@ -20,7 +20,7 @@
 DEVICE     = atmega8
 CLOCK      = 8000000
 PROGRAMMER = #-c stk500v2 -P avrdoper
-OBJECTS    = main.o
+# OBJECTS    = main.o
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
@@ -48,15 +48,41 @@ FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 
 # Tune the lines below only if you know what you are doing:
 
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+# AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
+# COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+CC			= avr-gcc
+OBJCOPY		= avr-objcopy
+SIZE		= avr-size
 
 
 # Commands
 ifeq ($(OS), Windows_NT)
 	RM		= del /Q
+	RMDIR	= rd /s /q
 	MKDIR	= mkdir
+	ECHO	= echo
+	CD		= cd
 else
 	RM		= rm -f
+	RMDIR	= rm -f -R
 	MKDIR	= mkdir -p
+	ECHO	= echo
+	CD		= cd
 endif
+
+# 生成物などを入れるためのディレクトリ
+BUILDDIR	= $(CURDIR)/build
+
+# 最終的にできるプログラムの名前。ディレクトリ名と同じになるよ。
+PROGRAM		= $(notdir $(CURDIR))
+# カレントディレクトリにあるC言語のソースファイル名。
+SOURCES		= $(wildcard *.c)
+# .c ファイルから生成される、.o ファイルの名前。
+OBJECTS		= $(SOURCES:%.c=$(BUILDDIR)/%.o)
+# ソースファイル事の依存関係を記したファイル。
+DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
+
+CFLAGS		= -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+LIBS		= -L.
+INCLUDE		= \
+
