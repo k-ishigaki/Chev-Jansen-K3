@@ -84,7 +84,7 @@ OBJECTS		= $(SOURCES:%.c=$(BUILDDIR)/%.o)
 # ソースファイル事の依存関係を記したファイル。
 DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
 
-CFLAGS		= -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+CFLAGS		= -Wall -Os -MMD -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 LIBS		= -L.
 INCLUDE		= \
 

@@ -4,7 +4,7 @@ include vars.mk
 .PHONY:	all clean
 
 # symbolic targets:
-all: $(BUILDDIR) $(DEPENDS) $(BUILDDIR)/$(PROGRAM).hex
+all: $(BUILDDIR) $(BUILDDIR)/$(PROGRAM).hex
 
 $(BUILDDIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $(call FixPath, $<) -o $(call FixPath, $@)
@@ -38,7 +38,7 @@ clean:
 # file targets:
 $(BUILDDIR)/$(PROGRAM).elf: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(call FixPath, $@) $(call FixPath, $^)
-	# $(COMPILE) -o $@ $(OBJECTS)
+# $(COMPILE) -o $@ $(OBJECTS)
 
 $(BUILDDIR)/$(PROGRAM).hex: $(BUILDDIR)/$(PROGRAM).elf
 	$(RM) $(call FixPath, $@)
@@ -57,5 +57,8 @@ cpp:
 $(BUILDDIR):
 	$(MKDIR) $(call FixPath, $@)
 
-$(BUILDDIR)/%.d: %.c
-	$(CC) -MM $(CFLAGS) $(call FixPath, $<) > $(call FixPath, $@)
+# $(BUILDDIR)/%.d: %.c
+# 	$(CC) -MM $(CFLAGS) $(call FixPath, $<) > $(call FixPath, $@)
+
+-include $(DEPENDS)
+
