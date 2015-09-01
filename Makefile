@@ -4,10 +4,10 @@ include vars.mk
 .PHONY:	all clean
 
 # symbolic targets:
-all: $(call FixPath, $(BUILDDIR)) $(call FixPath, $(DEPENDS)) $(call FixPath, $(BUILDDIR)/$(PROGRAM).hex)
+all: $(BUILDDIR) $(DEPENDS) $(BUILDDIR)/$(PROGRAM).hex
 
 $(BUILDDIR)/%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $(call FixPath, $<) -o $(call FixPath, $@)
 
 # .S.o:
 # 	$(COMPILE) -x assembler-with-cpp -c $< -o $@
@@ -36,14 +36,14 @@ clean:
 	$(RMDIR) $(call FixPath, $(BUILDDIR))
 
 # file targets:
-$(call FixPath, $(BUILDDIR)/$(PROGRAM).elf): $(call FixPath, $(OBJECTS))
-	$(CC) $(CFLAGS) -o $@ $(OBJECTS)
+$(BUILDDIR)/$(PROGRAM).elf: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $(call FixPath, $@) $(call FixPath, $^)
 	# $(COMPILE) -o $@ $(OBJECTS)
 
-$(call FixPath, $(BUILDDIR)/$(PROGRAM).hex): $(call FixPath, $(BUILDDIR)/$(PROGRAM).elf)
-	$(RM) $@
-	$(OBJCOPY) -j .text -j .data -O ihex $< $@
-	$(SIZE) --format=avr --mcu=$(DEVICE) $<
+$(BUILDDIR)/$(PROGRAM).hex: $(BUILDDIR)/$(PROGRAM).elf
+	$(RM) $(call FixPath, $@)
+	$(OBJCOPY) -j .text -j .data -O ihex $(call FixPath, $<) $(call FixPath, $@)
+	$(SIZE) --format=avr --mcu=$(DEVICE) $(call FixPath, $<)
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 
@@ -54,8 +54,8 @@ disasm:	main.elf
 cpp:
 	$(COMPILE) -E main.c
 
-$(call FixPath, $(BUILDDIR)):
-	$(MKDIR) $@
+$(BUILDDIR):
+	$(MKDIR) $(call FixPath, $@)
 
-$(call FixPath, $(BUILDDIR)/)%.d: %.c
-	$(CC) -MM $(CFLAGS) $< > $@
+$(BUILDDIR)/%.d: %.c
+	$(CC) -MM $(CFLAGS) $(call FixPath, $<) > $(call FixPath, $@)
