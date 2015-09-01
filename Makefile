@@ -33,14 +33,14 @@ load: all
 	bootloadHID main.hex
 
 clean:
-	$(RMDIR) $(BUILDDIR)
+	$(RMDIR) $(call FixPath, $(BUILDDIR))
 
 # file targets:
-$(BUILDDIR)/$(PROGRAM).elf: $(OBJECTS)
+$(call FixPath, $(BUILDDIR)/$(PROGRAM).elf): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS)
 	# $(COMPILE) -o $@ $(OBJECTS)
 
-$(BUILDDIR)/$(PROGRAM).hex: $(BUILDDIR)/$(PROGRAM).elf
+$(call FixPath, $(BUILDDIR)/$(PROGRAM).hex): $(call FixPath, $(BUILDDIR)/$(PROGRAM).elf)
 	$(RM) $@
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 	$(SIZE) --format=avr --mcu=$(DEVICE) $<
@@ -54,8 +54,8 @@ disasm:	main.elf
 cpp:
 	$(COMPILE) -E main.c
 
-$(BUILDDIR):
-	$(MKDIR) $(BUILDDIR)
+$(call FixPath, $(BUILDDIR)):
+	$(MKDIR) $@
 
-$(BUILDDIR)/%.d: %.c
+$(call FixPath, $(BUILDDIR)/%.d): %.c
 	$(CC) -MM $(CFLAGS) $< > $@

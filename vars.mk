@@ -76,13 +76,13 @@ endif
 BUILDDIR	= $(CURDIR)/build
 
 # 最終的にできるプログラムの名前。ディレクトリ名と同じになるよ。
-PROGRAM		= $(call FixPath, $(notdir $(CURDIR)))
+PROGRAM		= $(notdir $(CURDIR))
 # カレントディレクトリにあるC言語のソースファイル名。
-SOURCES		= $(call FixPath, $(wildcard *.c))
+SOURCES		= $(wildcard *.c)
 # .c ファイルから生成される、.o ファイルの名前。
-OBJECTS		= $(call FixPath, $(SOURCES:%.c=$(BUILDDIR)/%.o))
+OBJECTS		= $(SOURCES:%.c=$(BUILDDIR)/%.o)
 # ソースファイル事の依存関係を記したファイル。
-DEPENDS		= $(call FixPath, $(SOURCES:%.c=$(BUILDDIR)/%.d))
+DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
 
 CFLAGS		= -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 LIBS		= -L.
