@@ -50,3 +50,13 @@ FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+
+
+# Commands
+ifeq ($(OS), Windows_NT)
+	RM		= del /Q
+	MKDIR	= mkdir
+else
+	RM		= rm -f
+	MKDIR	= mkdir -p
+endif

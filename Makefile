@@ -30,14 +30,14 @@ load: all
 	bootloadHID main.hex
 
 clean:
-	rm -f main.hex main.elf $(OBJECTS)
+	$(RM) main.hex main.elf $(OBJECTS)
 
 # file targets:
 main.elf: $(OBJECTS)
 	$(COMPILE) -o main.elf $(OBJECTS)
 
 main.hex: main.elf
-	rm -f main.hex
+	$(RM) main.hex
 	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
 	avr-size --format=avr --mcu=$(DEVICE) main.elf
 # If you have an EEPROM section, you must also create a hex file for the
