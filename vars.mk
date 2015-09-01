@@ -1,27 +1,57 @@
-# Name: Makefile
-# Author: <insert your name here>
-# Copyright: <insert your copyright message here>
-# License: <insert your license reference here>
+# MCU関連設定
+DEVICE		= atmega328p
+CLOCK		= 20000000
+PROGRAMMER	= #-c stk500v2 -P avrdoper
+HFUSE		= 0xd9
+LFUSE		= 0x24
 
-# This is a prototype Makefile. Modify it according to your needs.
-# You should at least check the settings for
-# DEVICE ....... The AVR device you compile for
-# CLOCK ........ Target AVR clock rate in Hertz
-# OBJECTS ...... The object files created from your source files. This list is
-#                usually the same as the list of source files with suffix ".o".
+# コンパイラ関連設定
+CC			= avr-gcc
+OBJCOPY		= avr-objcopy
+OBJDUMP		= avr-objdump
+SIZE		= avr-size
+# コンパイラオプションなど
+CFLAGS		= -Wall -Os -MMD -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+LIBS		= -L.
+INCLUDE		= 
+# ブートローダを使用するとき、.hexファイルをブートローダに対応させるためのコマンド(まぁ使わんやろ)
+HEX2BLHEX	= bootloadHID
+
+# コマンド関連設定(OS間差異吸収)
+ifeq ($(OS), Windows_NT)
+	RM		= del /Q
+	RMDIR	= rd /s /q
+	MKDIR	= mkdir
+	ECHO	= echo
+	CD		= cd
+	FixPath	= $(subst /,\,$1)
+else
+	RM		= rm -f
+	RMDIR	= rm -f -R
+	MKDIR	= mkdir -p
+	ECHO	= echo
+	CD		= cd
+	FixPath	= $1
+endif
+
+# 中間ファイルなどを入れるためのディレクトリ
+BUILDDIR	= $(CURDIR)/build
+
+# 最終的にできるプログラムの名前．ディレクトリ名と同じになるよ．
+PROGRAM		= $(notdir $(CURDIR))
+# カレントディレクトリにあるC言語のソースファイル名．
+SOURCES		= $(wildcard *.c)
+# .c ファイルから生成される、.o ファイルの名前．
+OBJECTS		= $(SOURCES:%.c=$(BUILDDIR)/%.o)
+# ソースファイル事の依存関係を記したファイル．
+DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
+
 # PROGRAMMER ... Options to avrdude which define the hardware you use for
 #                uploading to the AVR and the interface where this hardware
 #                is connected. We recommend that you leave it undefined and
 #                add settings like this to your ~/.avrduderc file:
 #                   default_programmer = "stk500v2"
 #                   default_serial = "avrdoper"
-# FUSES ........ Parameters for avrdude to flash the fuses appropriately.
-
-DEVICE     = atmega8
-CLOCK      = 8000000
-PROGRAMMER = #-c stk500v2 -P avrdoper
-# OBJECTS    = main.o
-FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
 # Example for 8 MHz internal oscillator
@@ -44,47 +74,3 @@ FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 #
 # For computing fuse byte values for other devices and options see
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/
-
-
-# Tune the lines below only if you know what you are doing:
-
-# AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-# COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
-CC			= avr-gcc
-OBJCOPY		= avr-objcopy
-SIZE		= avr-size
-
-
-# Commands
-ifeq ($(OS), Windows_NT)
-	RM		= del /Q
-	RMDIR	= rd /s /q
-	MKDIR	= mkdir
-	ECHO	= echo
-	CD		= cd
-	FixPath	= $(subst /,\,$1)
-else
-	RM		= rm -f
-	RMDIR	= rm -f -R
-	MKDIR	= mkdir -p
-	ECHO	= echo
-	CD		= cd
-	FixPath	= $1
-endif
-
-# 生成物などを入れるためのディレクトリ
-BUILDDIR	= $(CURDIR)/build
-
-# 最終的にできるプログラムの名前。ディレクトリ名と同じになるよ。
-PROGRAM		= $(notdir $(CURDIR))
-# カレントディレクトリにあるC言語のソースファイル名。
-SOURCES		= $(wildcard *.c)
-# .c ファイルから生成される、.o ファイルの名前。
-OBJECTS		= $(SOURCES:%.c=$(BUILDDIR)/%.o)
-# ソースファイル事の依存関係を記したファイル。
-DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
-
-CFLAGS		= -Wall -Os -MMD -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
-LIBS		= -L.
-INCLUDE		= \
-
