@@ -62,25 +62,27 @@ ifeq ($(OS), Windows_NT)
 	MKDIR	= mkdir
 	ECHO	= echo
 	CD		= cd
+	FixPath	= $(subst /,\,$1)
 else
 	RM		= rm -f
 	RMDIR	= rm -f -R
 	MKDIR	= mkdir -p
 	ECHO	= echo
 	CD		= cd
+	FixPath	= $1
 endif
 
 # 生成物などを入れるためのディレクトリ
 BUILDDIR	= $(CURDIR)/build
 
 # 最終的にできるプログラムの名前。ディレクトリ名と同じになるよ。
-PROGRAM		= $(notdir $(CURDIR))
+PROGRAM		= $(call FixPath, $(notdir $(CURDIR)))
 # カレントディレクトリにあるC言語のソースファイル名。
-SOURCES		= $(wildcard *.c)
+SOURCES		= $(call FixPath, $(wildcard *.c))
 # .c ファイルから生成される、.o ファイルの名前。
-OBJECTS		= $(SOURCES:%.c=$(BUILDDIR)/%.o)
+OBJECTS		= $(call FixPath, $(SOURCES:%.c=$(BUILDDIR)/%.o))
 # ソースファイル事の依存関係を記したファイル。
-DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
+DEPENDS		= $(call FixPath, $(SOURCES:%.c=$(BUILDDIR)/%.d))
 
 CFLAGS		= -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 LIBS		= -L.
