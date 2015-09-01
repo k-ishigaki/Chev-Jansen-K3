@@ -3,7 +3,8 @@ DEVICE		= atmega328p
 CLOCK		= 20000000
 PROGRAMMER	= #-c stk500v2 -P avrdoper
 HFUSE		= 0xd9
-LFUSE		= 0x24
+LFUSE		= 0xe7
+XFUSE		= 0x07
 
 # コンパイラ関連設定
 CC			= avr-gcc
@@ -16,6 +17,8 @@ LIBS		= -L.
 INCLUDE		= 
 # ブートローダを使用するとき、.hexファイルをブートローダに対応させるためのコマンド(まぁ使わんやろ)
 HEX2BLHEX	= bootloadHID
+# HIDaspxを使用するためのコマンド
+HIDSPX		= hidspx
 
 # コマンド関連設定(OS間差異吸収)
 ifeq ($(OS), Windows_NT)
@@ -53,24 +56,22 @@ DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
 #                   default_programmer = "stk500v2"
 #                   default_serial = "avrdoper"
 
-# ATMega8 fuse bits used above (fuse bits for other devices are different!):
-# Example for 8 MHz internal oscillator
-# Fuse high byte:
-# 0xd9 = 1 1 0 1   1 0 0 1 <-- BOOTRST (boot reset vector at 0x0000)
-#        ^ ^ ^ ^   ^ ^ ^------ BOOTSZ0
-#        | | | |   | +-------- BOOTSZ1
-#        | | | |   +---------- EESAVE (set to 0 to preserve EEPROM over chip erase)
-#        | | | +-------------- CKOPT (clock option, depends on oscillator type)
-#        | | +---------------- SPIEN (if set to 1, serial programming is disabled)
-#        | +------------------ WDTON (if set to 0, watchdog is always on)
-#        +-------------------- RSTDISBL (if set to 0, RESET pin is disabled)
-# Fuse low byte:
-# 0x24 = 0 0 1 0   0 1 0 0
-#        ^ ^ \ /   \--+--/
-#        | |  |       +------- CKSEL 3..0 (8M internal RC)
-#        | |  +--------------- SUT 1..0 (slowly rising power)
-#        | +------------------ BODEN (if 0, brown-out detector is enabled)
-#        +-------------------- BODLEVEL (if 0: 4V, if 1: 2.7V)
-#
-# For computing fuse byte values for other devices and options see
+# 2015/09/01現在のJansenのFuse値
+# Device: ATmega328P
+# Mode: ISP/Parallel
+# High:11-11001 (0xd9)
+#      |||||||+-- BOOTRST (1:Normal, 0:BootLoader)
+#      |||||++-- BOOTSZ[1:0] (11:256W, 10:512, 01:1024, 00:2048)
+#      ||||+-- EESAVE (消去でEEPROMを 1:消去, 0:保持)
+#      |||+-- WDTON (1:WDT通常動作, 0:WDT常時ON)
+#      ||+-- SPIEN (1:ISP禁止, 0:ISP許可) ※Parallel時のみ
+#      |+-- DWEN (On-Chipデバッグ 1:無効, 0:有効)
+#      +-- RSTDISBL (RESETピン 1:有効, 0:無効(PC6))
+# Low: 11100111 (0xe7)
+#      ||||++++-- CKSEL[3:0] システムクロック選択
+#      ||++-- SUT[1:0] 起動時間
+#      |+-- CKOUT (0:PB0にシステムクロックを出力)
+#      +-- CKDIV8 クロック分周初期値 (1:1/1, 0:1/8)
+# Ext: -----111 (0x07)
+#           +++-- BODLEVEL[2:0] (111:無, 110:1.8V, 101:2.7V, 100:4.3V)
 # the fuse bit calculator at http://www.engbedded.com/fusecalc/

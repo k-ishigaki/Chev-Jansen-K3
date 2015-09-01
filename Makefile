@@ -33,10 +33,12 @@ $(BUILDDIR)/$(PROGRAM).hex: $(BUILDDIR)/$(PROGRAM).elf
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 flash:	all
-	$(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) -U flash:w:$(call FixPath, $(BUILDDIR)/$(PROGRAM).hex):i
+	$(HIDSPX) $(call FixPath, $(BUILDDIR)/$(PROGRAM).hex)
+#	$(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) -U flash:w:$(call FixPath, $(BUILDDIR)/$(PROGRAM).hex):i
 
 fuse:
-	$(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) -U hfuse:w:$(HFUSE):m -U lfuse:w:$(LFUSE):m
+	$(HIDSPX) -fH$(HFUSE) -fL$(LFUSE) -fX$(XFUSE)
+#	$(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) -U hfuse:w:$(HFUSE):m -U lfuse:w:$(LFUSE):m
 
 # Xcode uses the Makefile targets "", "clean" and "install"
 install: flash fuse
