@@ -4,7 +4,7 @@ include vars.mk
 .PHONY:	all clean
 
 # symbolic targets:
-all: $(BUILDDIR) $(DEPENDS) $(BUILDDIR)/$(PROGRAM).hex
+all: $(call FixPath, $(BUILDDIR)) $(call FixPath, $(DEPENDS)) $(call FixPath, $(BUILDDIR)/$(PROGRAM).hex)
 
 $(BUILDDIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
