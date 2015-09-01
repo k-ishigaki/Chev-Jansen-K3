@@ -36,7 +36,7 @@ clean:
 	$(RMDIR) $(call FixPath, $(BUILDDIR))
 
 # file targets:
-$(call FixPath, $(BUILDDIR)/$(PROGRAM).elf): $(OBJECTS)
+$(call FixPath, $(BUILDDIR)/$(PROGRAM).elf): $(call FixPath, $(OBJECTS))
 	$(CC) $(CFLAGS) -o $@ $(OBJECTS)
 	# $(COMPILE) -o $@ $(OBJECTS)
 
@@ -57,5 +57,5 @@ cpp:
 $(call FixPath, $(BUILDDIR)):
 	$(MKDIR) $@
 
-$(call FixPath, $(BUILDDIR)/%.d): %.c
+$(call FixPath, $(BUILDDIR)/)%.d: %.c
 	$(CC) -MM $(CFLAGS) $< > $@
