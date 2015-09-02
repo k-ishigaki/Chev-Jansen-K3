@@ -38,7 +38,7 @@ else
 endif
 
 # 中間ファイルなどを入れるためのディレクトリ
-BUILDDIR	= $(CURDIR)/build
+BUILDDIR	= $(CURDIR)/bin
 
 # 最終的にできるプログラムの名前．ディレクトリ名と同じになるよ．
 PROGRAM		= $(notdir $(CURDIR))
