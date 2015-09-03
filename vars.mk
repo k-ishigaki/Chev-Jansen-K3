@@ -20,34 +20,48 @@ HEX2BLHEX	= bootloadHID
 # HIDaspxを使用するためのコマンド
 HIDSPX		= hidspx
 
+# ソースコードが入っているディレクトリ
+SRCDIR		= $(CURDIR)/src
+# 中間ファイルや生成物を入れるディレクトリ
+BINDIR		= $(CURDIR)/bin
+
 # コマンド関連設定(OS間差異吸収)
 ifeq ($(OS), Windows_NT)
+	# コマンド
 	RM		= del /Q
 	RMDIR	= rd /s /q
 	MKDIR	= mkdir
 	ECHO	= echo
 	CD		= cd
+	# パス変換(/->\)
 	FixPath	= $(subst /,\,$1)
+	# srcディレクトリ以下の全ファイル
+	SOURCES	:= $(shell dir $(call FixPath,$(SRCDIR)) /s /b /a-d)
+	SOURCES := $(subst \,/,$(SOURCES))
 else
+	# コマンド
 	RM		= rm -f
 	RMDIR	= rm -f -R
 	MKDIR	= mkdir -p
 	ECHO	= echo
 	CD		= cd
+	# パス変換(/->\)
 	FixPath	= $1
+	# srcディレクトリ以下の全ファイル
+	SOURCES	:= $(shell find $(SRCDIR) -type f -name '*')
 endif
 
-# 中間ファイルなどを入れるためのディレクトリ
-BUILDDIR	= $(CURDIR)/bin
+# 中間ファイルなどを入れるためのディレクトリ(ソースコード入りディレクトリの、src->binしたもの)
+DIRS		:= $(patsubst $(SRCDIR)%,$(BINDIR)%,$(sort $(dir $(SOURCES))))
 
 # 最終的にできるプログラムの名前．ディレクトリ名と同じになるよ．
 PROGRAM		= $(notdir $(CURDIR))
-# カレントディレクトリにあるC言語のソースファイル名．
-SOURCES		= $(wildcard *.c)
+# カレントディレクトリ以下にあるC言語のソースファイル名．
+SOURCES		:= $(filter %.c,$(SOURCES))
 # .c ファイルから生成される、.o ファイルの名前．
-OBJECTS		= $(SOURCES:%.c=$(BUILDDIR)/%.o)
+OBJECTS		= $(SOURCES:$(SRCDIR)/%.c=$(BINDIR)/%.o)
 # ソースファイル事の依存関係を記したファイル．
-DEPENDS		= $(SOURCES:%.c=$(BUILDDIR)/%.d)
+DEPENDS		= $(SOURCES:$(SRCDIR)/%.c=$(BINDIR)/%.d)
 
 # PROGRAMMER ... Options to avrdude which define the hardware you use for
 #                uploading to the AVR and the interface where this hardware

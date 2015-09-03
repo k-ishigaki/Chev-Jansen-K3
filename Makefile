@@ -3,29 +3,29 @@ include vars.mk
 .PHONY:	all clean cmake
 
 # メインターゲット
-all: $(BUILDDIR) $(BUILDDIR)/$(PROGRAM).hex
+all: $(DIRS) $(BINDIR)/$(PROGRAM).hex
 
 # 中間ファイルなどを全て消し、makeする前の状態に戻します
 clean:
-	$(RMDIR) $(call FixPath, $(BUILDDIR))
+	$(RMDIR) $(call FixPath, $(BINDIR))
 
 # cleanしてからmake
 cmake: clean all
 
 # 中間ファイルなどを置くディレクトリを作成する
-$(BUILDDIR):
+$(BINDIR)/%: $(SRCDIR)/%
 	$(MKDIR) $(call FixPath, $@)
 
 # .c -> .o
-$(BUILDDIR)/%.o: %.c
+$(BINDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c $(call FixPath, $<) -o $(call FixPath, $@)
 
 # .o -> .elf
-$(BUILDDIR)/$(PROGRAM).elf: $(OBJECTS)
+$(BINDIR)/$(PROGRAM).elf: $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(call FixPath, $@) $(call FixPath, $^)
 
 # .elf -> .hex
-$(BUILDDIR)/$(PROGRAM).hex: $(BUILDDIR)/$(PROGRAM).elf
+%.hex: %.elf
 	$(RM) $(call FixPath, $@)
 	$(OBJCOPY) -j .text -j .data -O ihex $(call FixPath, $<) $(call FixPath, $@)
 	$(SIZE) --format=avr --mcu=$(DEVICE) $(call FixPath, $<)
@@ -48,7 +48,7 @@ load: all
 	$(HEX2BLHEX) $(call FixPath, $(BUILDDIR)/$(PROGRAM).hex)
 
 # Targets for code debugging and analysis:
-disasm:	$(BUILDDIR)/$(PROGRAM).elf
+disasm:	$(BINDIR)/$(PROGRAM).elf
 	$(OBJDUMP) -d $(call FixPath, $<)
 
 -include $(DEPENDS)
