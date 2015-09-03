@@ -3,7 +3,7 @@ include vars.mk
 .PHONY:	all clean cmake
 
 # メインターゲット
-all: $(DIRS) $(BINDIR)/$(PROGRAM).hex
+all: $(BINDIR)/$(PROGRAM).hex
 
 # 中間ファイルなどを全て消し、makeする前の状態に戻します
 clean:
@@ -12,12 +12,14 @@ clean:
 # cleanしてからmake
 cmake: clean all
 
-# 中間ファイルなどを置くディレクトリを作成する
-$(BINDIR)/%: $(SRCDIR)/%
-	$(MKDIR) $(call FixPath, $@)
-
 # .c -> .o
 $(BINDIR)/%.o: $(SRCDIR)/%.c
+# 生成先のディレクトリが存在しない場合はまず作る
+ifeq ($(OS),Windows_NT)
+	@if not exist $(call FixPath,$(@D))\ ($(MKDIR) $(call FixPath,$(@D)))
+else
+	@[ -d $(@D) ] || $(MKDIR) $(@D)
+endif
 	$(CC) $(CFLAGS) -c $(call FixPath, $<) -o $(call FixPath, $@)
 
 # .o -> .elf

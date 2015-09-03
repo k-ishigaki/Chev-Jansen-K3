@@ -33,7 +33,7 @@ ifeq ($(OS), Windows_NT)
 	MKDIR	= mkdir
 	ECHO	= echo
 	CD		= cd
-	# パス変換(/->\)
+	# パス変換('/'->'\')
 	FixPath	= $(subst /,\,$1)
 	# srcディレクトリ以下の全ファイル
 	SOURCES	:= $(shell dir $(call FixPath,$(SRCDIR)) /s /b /a-d)
@@ -45,7 +45,7 @@ else
 	MKDIR	= mkdir -p
 	ECHO	= echo
 	CD		= cd
-	# パス変換(/->\)
+	# パス変換(Windows以外では変換しない)
 	FixPath	= $1
 	# srcディレクトリ以下の全ファイル
 	SOURCES	:= $(shell find $(SRCDIR) -type f -name '*')
