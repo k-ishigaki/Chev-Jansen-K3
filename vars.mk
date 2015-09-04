@@ -12,7 +12,7 @@ OBJCOPY		= avr-objcopy
 OBJDUMP		= avr-objdump
 SIZE		= avr-size
 # コンパイラオプションなど
-CFLAGS		= -Wall -Os -MMD -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+CFLAGS		= -Wall -Os -MMD -DF_CPU=$(CLOCK) -mmcu=$(DEVICE) -std=c99
 LIBS		= -L.
 INCLUDE		= 
 # ブートローダを使用するとき、.hexファイルをブートローダに対応させるためのコマンド(まぁ使わんやろ)
