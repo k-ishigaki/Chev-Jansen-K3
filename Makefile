@@ -35,8 +35,8 @@ $(BINDIR)/$(PROGRAM).elf: $(OBJECTS)
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 flash:	all
-	$(HIDSPX) $(call FixPath, $(BUILDDIR)/$(PROGRAM).hex)
-#	$(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) -U flash:w:$(call FixPath, $(BUILDDIR)/$(PROGRAM).hex):i
+	$(HIDSPX) $(call FixPath, $(BINDIR)/$(PROGRAM).hex)
+#	$(AVRDUDE) $(PROGRAMMER) -p $(DEVICE) -U flash:w:$(call FixPath, $(BINDIR)/$(PROGRAM).hex):i
 
 fuse:
 	$(HIDSPX) -fH$(HFUSE) -fL$(LFUSE) -fX$(XFUSE)
@@ -47,7 +47,7 @@ install: flash fuse
 
 # if you use a bootloader, change the command below appropriately:
 load: all
-	$(HEX2BLHEX) $(call FixPath, $(BUILDDIR)/$(PROGRAM).hex)
+	$(HEX2BLHEX) $(call FixPath, $(BINDIR)/$(PROGRAM).hex)
 
 # Targets for code debugging and analysis:
 disasm:	$(BINDIR)/$(PROGRAM).elf
