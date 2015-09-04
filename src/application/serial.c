@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include <stdio.h>
 
-#define FOSC 16000000
+#define FOSC 20000000
 #define BAUD 57600
 #define USART_BAUD ((FOSC/16)+(BAUD>>1))/BAUD-1
 
