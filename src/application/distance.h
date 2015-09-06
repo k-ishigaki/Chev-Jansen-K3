@@ -1,3 +1,6 @@
+#ifndef DISTANCE_H
+#define DISTANCE_H
+
 /**
  * Distance sensor id.
  *
@@ -40,3 +43,5 @@ void init_distance(void);
  * @return distance obtained from the sensor<br>
  */
 int get_distance(enum IRSensorID num);
+
+#endif /** DISTANCE_H */
