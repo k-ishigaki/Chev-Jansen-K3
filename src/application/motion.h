@@ -61,13 +61,13 @@ void set_checkpoint(int num);
  * @param 
  * @return 
  */
-PoleCood* get_pole_cood(int num);
+PoleCood get_pole_cood(int num);
 /**
  * 
  * @param 
  * @return 
  */
-RectCood* get_rect_cood(int num);
+RectCood get_rect_cood(int num);
 /**
  * テスト要関数
  */
