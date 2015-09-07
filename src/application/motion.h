@@ -1,23 +1,7 @@
 #ifndef MOTION_H
 #define MOTION_H
 #include <stdbool.h>
-
-/**
- * 座標を表す構造体．
- */
-typedef struct {
-	int distance;
-	int phi1;
-	int phi2;
-} PoleCood;
-/**
- * 座標を表す構造体．
- */
-typedef struct {
-	int x;
-	int y;
-	int theta;
-} RectCood;
+#include "coordinate.h"
 
 /**
  * モータ移動制御に関する全ての初期化を一括して行います．
