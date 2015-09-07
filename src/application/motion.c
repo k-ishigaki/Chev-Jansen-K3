@@ -2,27 +2,27 @@
 #include "../peripheral/motor.h"
 #include "motion.h"
 
+/* memo
+ロータリエンコーダカウント値:距離 = 1000:220mm
+	条件:target_cnt = 15
+ロータリエンコーダカウント値/回転 = 1700/回転
+	条件:超信地回転
+*/
+
 // PID制御用係数
-#define mK_r 3>>1	//全体制御系数
-#define mK_l 3>>1
-#define mP_r 2		//比例制御係数
-#define mP_l 2
-#define mI_r 5		//積分制御系数
-#define mI_l 5
+#define Kp_R 2		//比例制御係数
+#define Kp_L 2
+#define Ki_R 1		//積分制御系数
+#define Ki_L 1
 
 // 目標値
-uint8_t target_cnt_r = 0;
-uint8_t target_cnt_l = 0;
+int8_t target_cnt_r = 0;
+int8_t target_cnt_l = 0;
 
 /**
  * 目標値から、モータのPID制御を行います．
  */
-void pid_controll(uint8_t cnt_r_now, uint8_t cnt_l_now);
-/**
- * 引数で指定された値を0~255の範囲に制限して返します．
- * @param x 制限したい値
- */
-static uint8_t limit(int16_t x);
+void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now);
 
 void init_motion() {
 	// (一応)割り込み禁止
@@ -67,42 +67,34 @@ RectCood get_rect_cood(int num) {
 }
 void test(int hoge) {
 	target_cnt_l = hoge;
-	target_cnt_r = hoge;
+	target_cnt_r = -hoge;
 }
 
-void pid_controll(uint8_t cnt_r_now, uint8_t cnt_l_now) {
+#define HOGE (1700*4)
+void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	// 積分項計算に使用．
 	static int16_t r_I = 0;
 	static int16_t l_I = 0;
+	// 微分項計算に使用．
+	int16_t r_P;
+	int16_t l_P;
 
-	// 目標値と現在値との偏差を取得
-	int8_t deltaR = target_cnt_r - cnt_r_now;
-	int8_t deltaL = target_cnt_l - cnt_l_now;
+	// 目標値と現在値との偏差
+	int8_t delta_R = target_cnt_r - cnt_r_now;
+	int8_t delta_L = target_cnt_l - cnt_l_now;
 
-	// P制御(比例制御)
-	int16_t r_P = deltaR*mP_r;
-	int16_t l_P = deltaL*mP_l;
+	// P項(微分制御項)
+	r_P = delta_R * Kp_R;
+	l_P = delta_L * Kp_L;
 
-	// I制御(積分制御)
-	r_I+= deltaR;
-	l_I+= deltaL;
+	// I項(積分制御項)
+	r_I += delta_R * Ki_R;
+	l_I += delta_L * Ki_L;
 
 	// モータの出力を決定
-	int16_t motorR_spd = limit( ( target_cnt_r + r_P + r_I ) *mK_r);
-	int16_t motorL_spd = limit( ( target_cnt_l + l_P + l_I ) *mK_l);
-	// motorR_spd = limit( ( target_cnt_r + r_P + r_I/3 ) *mK_r);
-	// motorL_spd = limit( ( target_cnt_l + l_P + l_I/3 ) *mK_l);
+	int16_t motorR_spd = target_cnt_r + r_P + r_I;
+	int16_t motorL_spd = target_cnt_l + l_P + l_I;
 
 	// PWM設定
 	set_motor_pwm(motorR_spd, motorL_spd);
 }
-static uint8_t limit(int16_t x) {
-	if (x > 255) {
-		return 255;
-	} else if (x < 0) {
-		return 0;
-	} else {
-		return x;
-	}
-}
-

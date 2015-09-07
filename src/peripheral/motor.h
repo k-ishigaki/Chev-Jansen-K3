@@ -18,7 +18,7 @@ void init_intr(void);
 /**
  * Timer2割り込み時にコールバックする関数(引数は右左のロータリエンコーダのカウント値)を指定します．
  */
-void set_t2intr_callback(void (*f)(uint8_t, uint8_t));
+void set_t2intr_callback(void (*f)(int8_t, int8_t));
 /**
  * モータに出力するPWMの値を設定します．
  * @param r_pwm 右モータに入力するPWMの値()
