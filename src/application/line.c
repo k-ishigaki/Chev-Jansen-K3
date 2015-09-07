@@ -2,6 +2,17 @@
 #include "../peripheral/gpio.h"
 #include "../peripheral/adc.h"
 
+/*
+ * ラインセンサの反応について
+ *
+ * ラインの位置がまったくリニアには出力されていません
+ * 中心こそ2とか-4とかの値を出しますが、
+ * 10, -10あたりをすっ飛ばして22とか-20あたりの数を
+ * いきなり返してきます
+ * ライントレースもこれを踏まえてあまりきれいなライントレースを
+ * 考えないほうがいいと思います
+ */
+
 static const struct DigitalPin* digitalInput;
 
 enum Constant {
@@ -38,8 +49,10 @@ enum LineState get_line_state() {
 int get_line_position() {
 	if (digitalInput->read() == false) {
 		// ライン上のときは中心からの位置を返す
-		uint8_t value = ADC_Solo(AD_CHANNEL);
-		return value;
+		// 適当な式です
+		int position =
+			((int)ADC_Solo(AD_CHANNEL) - 128) * 2 / 5;
+		return position;
 	} else {
 		// ライン上でないときは0（中心）を返す
 		return 0;
