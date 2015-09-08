@@ -18,4 +18,4 @@ typedef struct {
 	int theta;
 } RectCood;
 
-#endif COORDINATE_H /** COORDINATE_H */
+#endif /** COORDINATE_H */
