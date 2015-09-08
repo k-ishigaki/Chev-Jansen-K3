@@ -39,19 +39,19 @@ bool is_moving(void);
  * 整数の引数で指定されたインデックスを持つチェックポイントを指定します．
  * @param 
  */
-void set_checkpoint(int num);
+void set_checkpoint(uint8_t cood_index);
 /**
  * 
  * @param 
  * @return 
  */
-PoleCood get_pole_cood(int num);
+PoleCood get_pole_cood(uint8_t cood_index);
 /**
  * 
  * @param 
  * @return 
  */
-RectCood get_rect_cood(int num);
+RectCood get_rect_cood(uint8_t cood_index);
 /**
  * テスト要関数
  */

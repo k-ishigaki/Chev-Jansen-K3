@@ -1,6 +1,7 @@
 #include <avr/interrupt.h>
 #include "../peripheral/motor.h"
 #include "motion.h"
+#include "jansenmodel.h"
 
 /* memo
 ロータリエンコーダカウント値:距離 = 1000:220mm
@@ -37,6 +38,9 @@ void init_motion() {
 	// Timer2割り込みのコールバック設定
 	set_t2intr_callback(pid_controll);
 
+	// 座標系初期化
+	set_origin();
+
 	// 割り込み許可
 	sei();
 }
@@ -49,21 +53,14 @@ void move_to_rect(RectCood* rc, int velocity) {
 bool is_moving() {
 	return false;
 }
-void set_checkpoint(int num) {
+void set_checkpoint(uint8_t cood_index) {
+	set_rel_origin(cood_index)
 }
-PoleCood get_pole_cood(int num) {
-	PoleCood pc;
-	pc.distance = 100;
-	pc.phi1 = 100;
-	pc.phi2 = 100;
-	return pc;
+PoleCood get_pole_cood(uint8_t cood_index) {
+	return get_rel_polecood(cood_index);
 }
-RectCood get_rect_cood(int num) {
-	RectCood rc;
-	rc.x = 100;
-	rc.y = 100;
-	rc.theta = 100;
-	return rc;
+RectCood get_rect_cood(uint8_t cood_index) {
+	return get_rel_rectcood(cood_index);
 }
 void test(int hoge) {
 	target_cnt_l = hoge;
