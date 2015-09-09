@@ -57,6 +57,16 @@ struct DigitalPins {
 	 * MOSI pin.
 	 */
 	const struct DigitalPin* (*PB3Pin)(void);
+
+	/**
+	 * OC1B pin.
+	 */
+	const struct DigitalPin* (*PB2Pin)(void);
+
+	/**
+	 * OC1A pin.
+	 */
+	const struct DigitalPin* (*PB1Pin)(void);
 };
 extern const struct DigitalPins DigitalPins;
 
