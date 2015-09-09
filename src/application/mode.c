@@ -12,7 +12,7 @@ void init_mode() {
 	mosiPin = DigitalPins.PB3Pin();
 	// SCKピンはLOWを出力
 	sckPin->setDirection(DigitalPin_Direction.OUTPUT);
-	sckPin->write(0);
+	sckPin->write(false);
 	// MISOとMOSIはプルアップに設定
 	misoPin->setDirection(DigitalPin_Direction.INPUT_WITH_PULLUP);
 	mosiPin->setDirection(DigitalPin_Direction.INPUT_WITH_PULLUP);
