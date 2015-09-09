@@ -1,6 +1,7 @@
 #include "arm.h"
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include "../peripheral/gpio.h"
 
 #define ServoSub OCR1A	//サーボ角度指定 ?~?    //書き込む手前でcliすること
@@ -30,5 +31,31 @@ void init_arm() {
 	//サーボ設定
 	ServoSub = Servo1_Default;
 	ServoMain = Servo_Default;
+}
+
+void move_arms(int s_main, int s_sub) {
+	s_main += Servo_Default;
+	//max and min
+	if(s_main < 1760){
+		s_main = 1760;
+	}else if(s_main >4250){
+		s_main = 4250;
+	}
+
+	s_sub = Servo1_Default - s_sub;
+
+	if(s_sub > (6655 - s_main + 900)){
+		s_sub = 6655 - s_main + 900;
+		//uart_putchar('a');
+	}else if(s_sub < (6655 - s_main -100)){//-1000)){
+		s_sub = 6655 - s_main -100;
+		//uart_putchar('b');
+	}
+
+	//	Servo
+	cli();
+		ServoSub  = s_sub;//= (Servo1_Default - (adBox[0]<<4));
+		ServoMain = s_main;// = (Servo_Default + (adBox[1]<<4));
+	sei();
 }
 
