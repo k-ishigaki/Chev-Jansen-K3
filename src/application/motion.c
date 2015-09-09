@@ -16,14 +16,46 @@
 #define Ki_R 1		//積分制御系数
 #define Ki_L 1
 
+// 動作単位を表す構造体
+typedef struct {
+	int8_t r_spd;// [cnt]
+	int8_t l_spd;// [cnt]
+	int16_t cycle;
+} MotionUnit;
+
+// キューのサイズ
+#define QUEUE_SIZE 32
+// 連続した動作をスケジュールしておくための配列
+MotionUnit schedule_queue[QUEUE_SIZE];
+// キュー末尾の次のインデックス
+int8_t enqueue_index;
+// キュー先頭のインデックス
+int8_t dequeue_index;
+// 今の動作単位をすてて強制的に次に進むか
+bool force_to_next;
+
 // 目標値
-int8_t target_cnt_r = 0;
-int8_t target_cnt_l = 0;
+// int8_t target_cnt_r = 0;
+// int8_t target_cnt_l = 0;
 
 /**
  * 目標値から、モータのPID制御を行います．
  */
 void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now);
+/**
+ * 動作単位を動作スケジュールに追加．
+ * @param mu 動作単位を表す構造体．
+ */
+void enqueue(MotionUnit mu);
+/**
+ * スケジュールされた次の動作に対応する動作単位を返します．
+ * @return スケジュールされた次の動作に対応する動作単位．
+ */
+MotionUnit dequeue(void);
+/**
+ * キューをクリアする
+ */
+void clear_queue(void);
 
 void init_motion() {
 	// (一応)割り込み禁止
@@ -40,6 +72,20 @@ void init_motion() {
 
 	// 座標系初期化
 	set_origin();
+	// 各原点も全て初期化
+	for (int i=0; i<COOD_LIST_SIZE; i++) {
+		set_checkpoint(i);
+	}
+
+	// キューのリセット
+	enqueue_index = 0;
+	dequeue_index = 0;
+	for (int i=0; i<QUEUE_SIZE; i++) {
+		MotionUnit mu = {0, 0, 0};
+		schedule_queue[i] = mu;
+	}
+	// ほげ
+	force_to_next = false;
 
 	// 割り込み許可
 	sei();
@@ -63,8 +109,14 @@ RectCood get_rect_cood(uint8_t cood_index) {
 	return get_rel_rectcood(cood_index);
 }
 void test(int hoge) {
-	target_cnt_l = hoge;
-	target_cnt_r = hoge;
+	// target_cnt_l = hoge;
+	// target_cnt_r = hoge;
+	MotionUnit mu = {15, 15, 60};
+	enqueue(mu);
+	MotionUnit mu1 = {15, -15, 60};
+	enqueue(mu1);
+	MotionUnit mu2 = {15, 15, 60};
+	enqueue(mu2);
 }
 
 void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
@@ -74,6 +126,26 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	// 微分項計算に使用．
 	int16_t r_P;
 	int16_t l_P;
+	// 目標値
+	static int8_t target_cnt_r = 0;
+	static int8_t target_cnt_l = 0;
+	// 現在実行中の動作単位
+	static MotionUnit current_mu = {0, 0, 0};
+
+	// まずは現在実行中の動作単位について、その実行持続ステップ数をデクリメント
+	current_mu.cycle--;
+	if (current_mu.cycle < 0 || force_to_next) {
+		// もし予定されたステップ数を実行し終えた場合 or 強制的に次の動作へ
+
+		// 強制フラグ解除
+		force_to_next = false;
+
+		// 次の動作単位をキューからロード
+		current_mu = dequeue();
+		// 目標速度をセット
+		target_cnt_r = current_mu.r_spd;
+		target_cnt_l = current_mu.l_spd;
+	}
 
 	// 目標値と現在値との偏差
 	int8_t delta_R = target_cnt_r - cnt_r_now;
@@ -93,4 +165,39 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 
 	// PWM設定
 	set_motor_pwm(motorR_spd, motorL_spd);
+}
+void enqueue(MotionUnit mu) {
+	// 次の追加インデックス
+	int8_t next_enqueue_index = (enqueue_index+1) % QUEUE_SIZE;
+
+	if (next_enqueue_index == dequeue_index) {
+		// 入れる場所がない．
+		return;
+	}
+
+	// まだ余裕ある場合，入れる．
+	schedule_queue[enqueue_index] = mu;
+
+	// インデックスを進める
+	enqueue_index = next_enqueue_index;
+}
+MotionUnit dequeue(void) {
+	// 返すやつ
+	MotionUnit mu = {0, 0, 0};
+
+	if (dequeue_index == enqueue_index) {
+		// 出すデータがない．
+		return mu;
+	}
+
+	// 出すデータが有るときはそれを返す．
+	mu = schedule_queue[dequeue_index];
+
+	// インデックスを進める
+	dequeue_index = (dequeue_index+1) % QUEUE_SIZE;
+
+	return mu;
+}
+void clear_queue(void) {
+	dequeue_index = enqueue_index = 0;
 }

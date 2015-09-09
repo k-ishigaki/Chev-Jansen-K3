@@ -17,11 +17,12 @@ int main(void)
 
 	init_motion();
 
+	test(30);
+
 	for(;;){
 		/* insert your main loop code here */
-		test(30);
 		_delay_ms(2000);
-		test(15);
+		// test(15);
 		_delay_ms(2000);
 	}
 
