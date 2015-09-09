@@ -19,22 +19,15 @@ int main(void)
 	init_motion();
 	init_serial();
 
-	_delay_ms(2000);
-
 	PoleCood pc;
 	pc.phi1 = 90;
 	pc.distance = 200;
 	pc.phi2 = 90;
 
-	printf("pc->\n\r");
-	move_to_pole(pc, 50);
-	printf("<-pc\n\r");
-
+	move(-10000, 400, 75);
 
 	for(;;){
 		/* insert your main loop code here */
-		_delay_ms(2000);
-		printf("hellow\n\r");
 	}
 
 

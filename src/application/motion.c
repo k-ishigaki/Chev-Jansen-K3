@@ -20,7 +20,7 @@
 typedef struct {
 	int8_t r_spd;// [cnt]
 	int8_t l_spd;// [cnt]
-	int16_t cycle;
+	int16_t cycle;// -1の時はforce_to_nextが来るまでそのまま
 } MotionUnit;
 
 // キューのサイズ
@@ -91,10 +91,43 @@ void init_motion() {
 	sei();
 }
 void move(int curvature, int distance, int velocity) {
-}
-void move_to_pole(PoleCood pc, int velocity) {
+	// この動作を表す動作単位
+	MotionUnit mu;
+	// 目標とする左右のモータスピード
+	int16_t r_spd;
+	int16_t l_spd;
+
+	// 左右の速度の差[mm/s]
+	float diff_v = MACHINE_RADIUS_MM * velocity * curvature * 0.5 * 0.000001;
+	// 左右の速度の差[mm/cycle]
+	diff_v *= SEC_PER_CYCLE;
+	// 左右の速度の差[cnt/cycle]
+	diff_v *= CNT_PER_MM;
+
+	// 左右の速度差から目標値を設定
+	r_spd = (velocity + diff_v) * 0.5 + 0.5;
+	l_spd = (velocity - diff_v) * 0.5 + 0.5;
+
+	// 移動に必要な時間[s] (= [mm]/[mm/s])
+	float req_time = ((float)distance) / velocity;
+	// 移動に必要な制御回数[cycle]
+	req_time *= CYCLE_PER_SEC;
+
+	// 動作単位を記録
+	mu.r_spd = r_spd;
+	mu.l_spd = l_spd;
+	mu.cycle = req_time + 0.5;
+
 	// まずはキューをクリア
 	clear_queue();
+	// 動作単位をキューに追加
+	enqueue(mu);
+	// 次は強制的にキューから読み出し
+	force_to_next = true;
+}
+void move_to_pole(PoleCood pc, int velocity) {
+	// この動作に必要な3つの動作単位
+	MotionUnit mu[3];
 
 	// 速度方向(+/-)
 	int8_t spd_sign = (velocity>0) - (velocity<0);
@@ -108,24 +141,24 @@ void move_to_pole(PoleCood pc, int velocity) {
 	len[2] = pc.phi2 / 360.0 * CIRC_CNT + 0.5;
 
 	for (int phase=0; phase<3; phase++) {
-		// スケジュールに組み込む動作単位
-		MotionUnit mu;
-
 		// 進む向き
 		int8_t len_sign = (len[phase]>0) - (len[phase]<0);
 
 		// 右のスピード設定
-		mu.r_spd = len_sign * spd_sign * spd_abs;
+		mu[phase].r_spd = len_sign * spd_sign * spd_abs;
 		// 左のスピード設定(直進時だけは左右一緒の速度)
-		mu.l_spd = ((phase==1) ? mu.r_spd : -mu.r_spd);
+		mu[phase].l_spd = ((phase==1) ? mu[phase].r_spd : -mu[phase].r_spd);
 
 		// 必要な時間
-		mu.cycle = ((spd_abs==0) ? 0 : len_sign * len[phase] / spd_abs);
-
-		// キューに追加
-		enqueue(mu);
+		mu[phase].cycle = ((spd_abs==0) ? 0 : len_sign * len[phase] / spd_abs);
 	}
 
+	// まずはキューをクリア
+	clear_queue();
+	// 動作単位をキューに追加
+	for (int phase=0; phase<3; phase++) {
+		enqueue(mu[phase]);
+	}
 	// 次は強制的にキューから読み出し
 	force_to_next = true;
 }
@@ -163,8 +196,7 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	static MotionUnit current_mu = {0, 0, 0};
 
 	// まずは現在実行中の動作単位について、その実行持続ステップ数をデクリメント
-	current_mu.cycle--;
-	if (current_mu.cycle < 0 || force_to_next) {
+	if (current_mu.cycle-- == 0 || force_to_next) {
 		// もし予定されたステップ数を実行し終えた場合 or 強制的に次の動作へ
 
 		// 強制フラグ解除
@@ -175,6 +207,11 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 		// 目標速度をセット
 		trg_spd_r = current_mu.r_spd;
 		trg_spd_l = current_mu.l_spd;
+
+		// 継続動作単位の場合は減りすぎないように
+		if (current_mu.cycle < 0) {
+			current_mu.cycle = -1;
+		}
 	}
 
 	// 目標値と現在値との偏差
