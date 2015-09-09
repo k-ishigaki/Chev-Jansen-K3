@@ -33,10 +33,29 @@ struct DigitalPin {
 };
 
 struct DigitalPins {
+	/**
+	 * RXD pin.
+	 */
 	const struct DigitalPin* (*PD0Pin)(void);
+
+	/**
+	 * Line sensor digital input pin.
+	 */
 	const struct DigitalPin* (*PD4Pin)(void);
+
+	/**
+	 * SCK pin.
+	 */
 	const struct DigitalPin* (*PB5Pin)(void);
+
+	/**
+	 * MISO pin.
+	 */
 	const struct DigitalPin* (*PB4Pin)(void);
+
+	/**
+	 * MOSI pin.
+	 */
 	const struct DigitalPin* (*PB3Pin)(void);
 };
 extern const struct DigitalPins DigitalPins;
