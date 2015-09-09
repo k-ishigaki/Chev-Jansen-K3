@@ -5,6 +5,7 @@
 
 struct DigitalPin_Direction {
 	int INPUT;
+	int INPUT_WITH_PULLUP;
 	int OUTPUT;
 };
 extern const struct DigitalPin_Direction DigitalPin_Direction;

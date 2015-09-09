@@ -6,10 +6,12 @@
 
 enum DigitalPin_Direction_Constant {
 	DIGITAL_INPUT,
+	DIGITAL_INPUT_WITH_PULLUP,
 	DIGITAL_OUTPUT,
 };
 const struct DigitalPin_Direction DigitalPin_Direction = {
 	DIGITAL_INPUT,
+	DIGITAL_INPUT_WITH_PULLUP,
 	DIGITAL_OUTPUT,
 };
 
@@ -111,6 +113,11 @@ static void PxxPin_(setDirection)(int direction) {
 		case DIGITAL_INPUT:
 			// DDRxは0で入力
 			DDRx &= ~(_BV(Pxx));
+			break;
+		case DIGITAL_INPUT_WITH_PULLUP:
+			// DDRxを0、PORTxを1で入力プルアップ
+			DDRx &= ~(_BV(Pxx));
+			PORTx |= _BV(Pxx);
 			break;
 		case DIGITAL_OUTPUT:
 			// DDRxは1で出力
