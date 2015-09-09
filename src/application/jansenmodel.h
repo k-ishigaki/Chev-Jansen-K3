@@ -8,8 +8,20 @@
 // マシンの中心から車輪までの距離([mm]，0.22*1700/2pi)
 #define MACHINE_RADIUS_MM	59.52394872
 
+// 超信地旋回した時の，円周[cnt]
+#define CIRC_CNT		1700
+// 超信地旋回した時の，円周[mm]
+#define CIRC_MM			374
+
 // 1cntで進む距離[mm/cnt]．
 #define MM_PER_CNT		0.22
+// 1mmあたりカウント数[cnt/mm]．
+#define CNT_PER_MM		4.545454545
+
+// PID制御周波数([cycle/s]，20MHz/(1024分周*256カウント*(T2OVF_NUM_MAX+1)))
+#define CYCLE_PER_SEC	15.25878906
+// PID制御周期([s/cycle]，(1024分周*256カウント*(T2OVF_NUM_MAX+1))/20MHz)
+#define SEC_PER_CYCLE	0.065536
 
 // 記録できる仮想原点の数
 #define COOD_LIST_SIZE	16

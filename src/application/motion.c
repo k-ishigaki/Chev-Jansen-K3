@@ -2,6 +2,7 @@
 #include "../peripheral/motor.h"
 #include "motion.h"
 #include "jansenmodel.h"
+#include "serial.h"
 
 /* memo
 ロータリエンコーダカウント値:距離 = 1000:220mm
@@ -92,9 +93,49 @@ void init_motion() {
 }
 void move(int curvature, int distance, int velocity) {
 }
-void move_to_pole(PoleCood* pc, int velocity) {
+void move_to_pole(PoleCood pc, int velocity) {
+	// まずはキューをクリア
+	clear_queue();
+
+	// 速度方向(+/-)
+	int8_t spd_sign = (velocity>0) - (velocity<0);
+	// 速度([mm/s] -> [cnt/cycle])の絶対値
+	int16_t spd_abs = velocity * CNT_PER_MM * SEC_PER_CYCLE * spd_sign + 0.5;
+
+	// 各移動距離(回転/直進/回転)
+	int16_t len[3];
+	len[0] = pc.phi1 / 360.0 * CIRC_CNT + 0.5;
+	len[1] = pc.distance * CNT_PER_MM + 0.5;
+	len[2] = pc.phi2 / 360.0 * CIRC_CNT + 0.5;
+
+	for (int phase=0; phase<3; phase++) {
+		// スケジュールに組み込む動作単位
+		MotionUnit mu;
+
+		// 進む向き
+		int8_t len_sign = (len[phase]>0) - (len[phase]<0);
+
+		// 右のスピード設定
+		mu.r_spd = len_sign * spd_sign * spd_abs;
+		// 左のスピード設定(直進時だけは左右一緒の速度)
+		mu.l_spd = ((phase==1) ? mu.r_spd : -mu.r_spd);
+
+		// 必要な時間
+		mu.cycle = ((spd_abs==0) ? 0 : len_sign * len[phase] / spd_abs);
+
+		// キューに追加
+		enqueue(mu);
+	}
+
+	// 次は強制的にキューから読み出し
+	force_to_next = true;
 }
-void move_to_rect(RectCood* rc, int velocity) {
+void move_to_rect(RectCood rc, int velocity) {
+	// PoleCoodのほうが計算しやすいので変換してから
+	PolelCood pc;
+	pc = rect2pole(rc);
+	// いけー
+	move_to_pole(pc, velocity);
 }
 bool is_moving() {
 	return false;
@@ -108,16 +149,6 @@ PoleCood get_pole_cood(uint8_t cood_index) {
 RectCood get_rect_cood(uint8_t cood_index) {
 	return get_rel_rectcood(cood_index);
 }
-void test(int hoge) {
-	// target_cnt_l = hoge;
-	// target_cnt_r = hoge;
-	MotionUnit mu = {15, 15, 60};
-	enqueue(mu);
-	MotionUnit mu1 = {15, -15, 60};
-	enqueue(mu1);
-	MotionUnit mu2 = {15, 15, 60};
-	enqueue(mu2);
-}
 
 void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	// 積分項計算に使用．
@@ -127,8 +158,8 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	int16_t r_P;
 	int16_t l_P;
 	// 目標値
-	static int8_t target_cnt_r = 0;
-	static int8_t target_cnt_l = 0;
+	static int8_t trg_spd_r = 0;
+	static int8_t trg_spd_l = 0;
 	// 現在実行中の動作単位
 	static MotionUnit current_mu = {0, 0, 0};
 
@@ -143,13 +174,13 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 		// 次の動作単位をキューからロード
 		current_mu = dequeue();
 		// 目標速度をセット
-		target_cnt_r = current_mu.r_spd;
-		target_cnt_l = current_mu.l_spd;
+		trg_spd_r = current_mu.r_spd;
+		trg_spd_l = current_mu.l_spd;
 	}
 
 	// 目標値と現在値との偏差
-	int8_t delta_R = target_cnt_r - cnt_r_now;
-	int8_t delta_L = target_cnt_l - cnt_l_now;
+	int8_t delta_R = trg_spd_r - cnt_r_now;
+	int8_t delta_L = trg_spd_l - cnt_l_now;
 
 	// P項(微分制御項)
 	r_P = delta_R * Kp_R;
@@ -160,11 +191,11 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	l_I += delta_L * Ki_L;
 
 	// モータの出力を決定
-	int16_t motorR_spd = target_cnt_r + r_P + r_I;
-	int16_t motorL_spd = target_cnt_l + l_P + l_I;
+	int16_t pwm_r = trg_spd_r + r_P + r_I;
+	int16_t pwm_l = trg_spd_l + l_P + l_I;
 
 	// PWM設定
-	set_motor_pwm(motorR_spd, motorL_spd);
+	set_motor_pwm(pwm_r, pwm_l);
 }
 void enqueue(MotionUnit mu) {
 	// 次の追加インデックス

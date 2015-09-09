@@ -21,14 +21,14 @@ void move(int curvature, int distance, int velocity);
  * @param 
  * @param 
  */
-void move_to_pole(PoleCood* pc, int velocity);
+void move_to_pole(PoleCood pc, int velocity);
 /**
  * 引数で指定された座標まで，指定された速度で移動します．
  * 各単位はUnitTable.mdに従います．
  * @param 
  * @param 
  */
-void move_to_rect(RectCood* rc, int velocity);
+void move_to_rect(RectCood rc, int velocity);
 /**
  * 現在移動中であるかどうかをbool型変数として返します．
  * 関数{@code move(int,int,int)}と{@code init_serial(PoleCode*,int)}，{@code init_serial(RectCode*,int)}に関して，引数で指定された動作を完了した場合は false，それ以外は true
@@ -52,9 +52,5 @@ PoleCood get_pole_cood(uint8_t cood_index);
  * @return 
  */
 RectCood get_rect_cood(uint8_t cood_index);
-/**
- * テスト要関数
- */
-void test(int hoge);
 
 #endif /** MOTION_H */
