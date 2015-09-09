@@ -18,6 +18,8 @@ extern const struct DigitalPin* PD4Pin_constructor();
 extern const struct DigitalPin* PB5Pin_constructor();
 extern const struct DigitalPin* PB4Pin_constructor();
 extern const struct DigitalPin* PB3Pin_constructor();
+extern const struct DigitalPin* PB2Pin_constructor();
+extern const struct DigitalPin* PB1Pin_constructor();
 
 const struct DigitalPins DigitalPins = {
 	PD0Pin_constructor,
@@ -25,6 +27,8 @@ const struct DigitalPins DigitalPins = {
 	PB5Pin_constructor,
 	PB4Pin_constructor,
 	PB3Pin_constructor,
+	PB2Pin_constructor,
+	PB1Pin_constructor,
 };
 
 #endif /* COMMON_DECLARATION */
@@ -78,6 +82,26 @@ const struct DigitalPins DigitalPins = {
 #define PORTx         PORTB
 #define PINx          PINB
 #define PINxx         PINB3
+
+#elif !defined(PB2_DECLARATION)
+#define PB2_DECLARATION
+
+#define PxxPin_(name) PB2Pin_##name
+#define Pxx           PB2
+#define DDRx          DDRB
+#define PORTx         PORTB
+#define PINx          PINB
+#define PINxx         PINB2
+
+#elif !defined(PB1_DECLARATION)
+#define PB1_DECLARATION
+
+#define PxxPin_(name) PB1Pin_##name
+#define Pxx           PB1
+#define DDRx          DDRB
+#define PORTx         PORTB
+#define PINx          PINB
+#define PINxx         PINB1
 
 #define DECLARATION_COMPLITE
 #endif
