@@ -106,7 +106,7 @@ const struct DigitalPins DigitalPins = {
 #define DECLARATION_COMPLITE
 #endif
 
-static void PxxPin_(setDirection)(bool direction) {
+static void PxxPin_(setDirection)(int direction) {
 	switch ((enum DigitalPin_Direction_Constant)direction) {
 		case DIGITAL_INPUT:
 			// DDRxは0で入力

@@ -13,7 +13,7 @@ struct DigitalPin {
 	/**
 	 * Set direction of IO pin.
 	 */
-	void (*setDirection)(bool);
+	void (*setDirection)(int);
 
 	/**
 	 * Read pin state.
