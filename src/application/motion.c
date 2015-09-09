@@ -54,7 +54,7 @@ bool is_moving() {
 	return false;
 }
 void set_checkpoint(uint8_t cood_index) {
-	set_rel_origin(cood_index)
+	set_rel_origin(cood_index);
 }
 PoleCood get_pole_cood(uint8_t cood_index) {
 	return get_rel_polecood(cood_index);
@@ -64,10 +64,9 @@ RectCood get_rect_cood(uint8_t cood_index) {
 }
 void test(int hoge) {
 	target_cnt_l = hoge;
-	target_cnt_r = -hoge;
+	target_cnt_r = hoge;
 }
 
-#define HOGE (1700*4)
 void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	// 積分項計算に使用．
 	static int16_t r_I = 0;
