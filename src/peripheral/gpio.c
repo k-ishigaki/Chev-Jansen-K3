@@ -96,9 +96,8 @@ static void PxxPin_(setDirection)(bool direction) {
 }
 
 static bool PxxPin_(read)() {
-	// bit_is_set
 	// 指定レジスタの指定のビットがセット(1)されているかどうかチェック
-	return bit_is_set(PINx, PINxx);
+	return (PINx >> PINxx) & 0b00000001;
 }
 
 static void PxxPin_(write)(bool value) {
