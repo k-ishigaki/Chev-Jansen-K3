@@ -97,16 +97,15 @@ void move(int curvature, int distance, int velocity) {
 	int16_t r_spd;
 	int16_t l_spd;
 
-	// 左右の速度の差[mm/s]
-	float diff_v = MACHINE_RADIUS_MM * velocity * curvature * 0.5 * 0.000001;
-	// 左右の速度の差[mm/cycle]
-	diff_v *= SEC_PER_CYCLE;
-	// 左右の速度の差[cnt/cycle]
-	diff_v *= CNT_PER_MM;
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]
+	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
+
+	// 左右の速度の差[cnt/cycle] (ちなみに、MACHINE_RADIUS_MM[mm], curvature[/mm])
+	float diff_v = MACHINE_RADIUS_MM * spd * curvature * 0.5 * 0.000001;
 
 	// 左右の速度差から目標値を設定
-	r_spd = (velocity + diff_v) * 0.5 + 0.5;
-	l_spd = (velocity - diff_v) * 0.5 + 0.5;
+	r_spd = (spd + diff_v) * 0.5 + 0.5;
+	l_spd = (spd - diff_v) * 0.5 + 0.5;
 
 	// 移動に必要な時間[s] (= [mm]/[mm/s])
 	float req_time = ((float)distance) / velocity;
