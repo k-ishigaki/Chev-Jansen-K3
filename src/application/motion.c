@@ -2,7 +2,6 @@
 #include "../peripheral/motor.h"
 #include "motion.h"
 #include "jansenmodel.h"
-#include "serial.h"
 
 /* memo
 ロータリエンコーダカウント値:距離 = 1000:220mm
@@ -132,7 +131,7 @@ void move_to_pole(PoleCood pc, int velocity) {
 }
 void move_to_rect(RectCood rc, int velocity) {
 	// PoleCoodのほうが計算しやすいので変換してから
-	PolelCood pc;
+	PoleCood pc;
 	pc = rect2pole(rc);
 	// いけー
 	move_to_pole(pc, velocity);
