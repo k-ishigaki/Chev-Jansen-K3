@@ -5,6 +5,7 @@
 
 struct DigitalPin_Direction {
 	int INPUT;
+	int INPUT_WITH_PULLUP;
 	int OUTPUT;
 };
 extern const struct DigitalPin_Direction DigitalPin_Direction;
@@ -13,7 +14,7 @@ struct DigitalPin {
 	/**
 	 * Set direction of IO pin.
 	 */
-	void (*setDirection)(bool);
+	void (*setDirection)(int);
 
 	/**
 	 * Read pin state.
@@ -33,11 +34,40 @@ struct DigitalPin {
 };
 
 struct DigitalPins {
+	/**
+	 * RXD pin.
+	 */
 	const struct DigitalPin* (*PD0Pin)(void);
+
+	/**
+	 * Line sensor digital input pin.
+	 */
 	const struct DigitalPin* (*PD4Pin)(void);
+
+	/**
+	 * SCK pin.
+	 */
 	const struct DigitalPin* (*PB5Pin)(void);
+
+	/**
+	 * MISO pin.
+	 */
 	const struct DigitalPin* (*PB4Pin)(void);
+
+	/**
+	 * MOSI pin.
+	 */
 	const struct DigitalPin* (*PB3Pin)(void);
+
+	/**
+	 * OC1B pin.
+	 */
+	const struct DigitalPin* (*PB2Pin)(void);
+
+	/**
+	 * OC1A pin.
+	 */
+	const struct DigitalPin* (*PB1Pin)(void);
 };
 extern const struct DigitalPins DigitalPins;
 
