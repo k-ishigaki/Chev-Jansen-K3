@@ -22,9 +22,17 @@ int main(void)
 	PoleCood pc;
 	pc.phi1 = 90;
 	pc.distance = 200;
-	pc.phi2 = 90;
+	pc.phi2 = -90;
 
+	move_to_pole(pc, 50);
+	while (is_moving()) {
+
+	}
 	move(-10000, 400, 75);
+	while (is_moving()) {
+		
+	}
+	move_to_pole(pc, 50);
 
 	for(;;){
 		/* insert your main loop code here */

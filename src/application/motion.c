@@ -26,13 +26,16 @@ typedef struct {
 // キューのサイズ
 #define QUEUE_SIZE 32
 // 連続した動作をスケジュールしておくための配列
-MotionUnit schedule_queue[QUEUE_SIZE];
+volatile MotionUnit schedule_queue[QUEUE_SIZE];
 // キュー末尾の次のインデックス
-int8_t enqueue_index;
+volatile int8_t enqueue_index;
 // キュー先頭のインデックス
-int8_t dequeue_index;
+volatile int8_t dequeue_index;
 // 今の動作単位をすてて強制的に次に進むか
-bool force_to_next;
+volatile bool force_to_next;
+
+// 動作単位実行中？
+volatile bool moving_now;
 
 // 目標値
 // int8_t target_cnt_r = 0;
@@ -84,8 +87,9 @@ void init_motion() {
 		MotionUnit mu = {0, 0, 0};
 		schedule_queue[i] = mu;
 	}
-	// ほげ
+	// フラグクリア
 	force_to_next = false;
+	moving_now = false;
 
 	// 割り込み許可
 	sei();
@@ -97,15 +101,15 @@ void move(int curvature, int distance, int velocity) {
 	int16_t r_spd;
 	int16_t l_spd;
 
-	// [mm/s] -> [cnt/s] -> [cnt/cycle]
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]22.34181818
 	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
 
-	// 左右の速度の差[cnt/cycle] (ちなみに、MACHINE_RADIUS_MM[mm], curvature[/mm])
+	// 左右の速度の差[cnt/cycle] (ちなみに、MACHINE_RADIUS_MM[mm], curvature[/mm])-6.649366199
 	float diff_v = MACHINE_RADIUS_MM * spd * curvature * 0.5 * 0.000001;
 
 	// 左右の速度差から目標値を設定
-	r_spd = (spd + diff_v) * 0.5 + 0.5;
-	l_spd = (spd - diff_v) * 0.5 + 0.5;
+	r_spd = (spd + diff_v) + 0.5;
+	l_spd = (spd - diff_v) + 0.5;
 
 	// 移動に必要な時間[s] (= [mm]/[mm/s])
 	float req_time = ((float)distance) / velocity;
@@ -123,6 +127,8 @@ void move(int curvature, int distance, int velocity) {
 	enqueue(mu);
 	// 次は強制的にキューから読み出し
 	force_to_next = true;
+	// 動作中よ
+	moving_now = true;
 }
 void move_to_pole(PoleCood pc, int velocity) {
 	// この動作に必要な3つの動作単位
@@ -160,6 +166,8 @@ void move_to_pole(PoleCood pc, int velocity) {
 	}
 	// 次は強制的にキューから読み出し
 	force_to_next = true;
+	// 動作中よ
+	moving_now = true;
 }
 void move_to_rect(RectCood rc, int velocity) {
 	// PoleCoodのほうが計算しやすいので変換してから
@@ -169,7 +177,7 @@ void move_to_rect(RectCood rc, int velocity) {
 	move_to_pole(pc, velocity);
 }
 bool is_moving() {
-	return false;
+	return moving_now;
 }
 void set_checkpoint(uint8_t cood_index) {
 	set_rel_origin(cood_index);
@@ -206,6 +214,9 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 		// 目標速度をセット
 		trg_spd_r = current_mu.r_spd;
 		trg_spd_l = current_mu.l_spd;
+
+		// 指定された動作をしている最中か？
+		moving_now = (current_mu.cycle != 0);
 
 		// 継続動作単位の場合は減りすぎないように
 		if (current_mu.cycle < 0) {
