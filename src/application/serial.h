@@ -1,6 +1,3 @@
-#ifndef SERIAL_H
-#define SERIAL_H
-
 /**
  * Initialize serial module.
  *
@@ -9,5 +6,3 @@
 void init_serial();
 
 int printf(const char *fmt, ...);
-
-#endif /* SERIAL_H */
