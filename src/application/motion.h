@@ -1,6 +1,7 @@
 #ifndef MOTION_H
 #define MOTION_H
 #include <stdbool.h>
+#include <stdint.h>
 #include "coordinate.h"
 
 /**
