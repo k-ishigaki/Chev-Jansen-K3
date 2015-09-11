@@ -3,6 +3,11 @@
 #include <stdbool.h>
 #include "coordinate.h"
 
+enum TURN_DIRECTION {
+	RIGHT_TURN,
+	LEFT_TURN,
+};
+
 /**
  * モータ移動制御に関する全ての初期化を一括して行います．
  */
@@ -29,6 +34,19 @@ void move_to_pole(PoleCood pc, int velocity);
  * @param 
  */
 void move_to_rect(RectCood rc, int velocity);
+/**
+ * 片側の車輪を軸にして、引数で指定された速度と角度だけ旋回します．
+ * @param degree 移動する角度[degree]
+ * @param turn_direction 右の車輪を停止するときはRIGHT_TURN、それ以外はLEFT_TURN
+ * @param velocity 移動する速度
+ */
+void move_turn(int degree, enum TURN_DIRECTION turn_direction, int velocity);
+/**
+ * 指定された速度と距離だけ移動します．
+ * @param distance 移動する距離[mm]
+ * @param velocity 移動する速度
+ */
+void move_forward(int distance, int velocity);
 /**
  * 現在移動中であるかどうかをbool型変数として返します．
  * 関数{@code move(int,int,int)}と{@code init_serial(PoleCode*,int)}，{@code init_serial(RectCode*,int)}に関して，引数で指定された動作を完了した場合は false，それ以外は true
