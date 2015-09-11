@@ -179,6 +179,9 @@ void move_to_rect(RectCood rc, int velocity) {
 bool is_moving() {
 	return moving_now;
 }
+void wait_completion(void) {
+	while (is_moving()) ;
+}
 void set_checkpoint(uint8_t cood_index) {
 	set_rel_origin(cood_index);
 }
