@@ -55,6 +55,10 @@ void move_forward(int distance, int velocity);
  */
 bool is_moving(void);
 /**
+ * 指定した動作が終了するのを待ちます．
+ */
+void wait_completion(void);
+/**
  * 整数の引数で指定されたインデックスを持つチェックポイントを指定します．
  * @param 
  */
