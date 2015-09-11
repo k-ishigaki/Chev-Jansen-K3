@@ -59,6 +59,12 @@ MotionUnit dequeue(void);
  * キューをクリアする
  */
 void clear_queue(void);
+/**
+ * 引数で与えられた数値の絶対値を返します．
+ * @param num 数値
+ * @return 引数の絶対値
+ */
+static int16_t abs(int16_t num);
 
 void init_motion() {
 	// (一応)割り込み禁止
@@ -101,25 +107,27 @@ void move(int curvature, int distance, int velocity) {
 	int16_t r_spd;
 	int16_t l_spd;
 
-	// [mm/s] -> [cnt/s] -> [cnt/cycle]22.34181818
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]
 	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
 
-	// 左右の速度の差[cnt/cycle] (ちなみに、MACHINE_RADIUS_MM[mm], curvature[/mm])-6.649366199
+	// 左右の速度の差[cnt/cycle] (ちなみに、MACHINE_RADIUS_MM[mm], curvature[/mm])
 	float diff_v = MACHINE_RADIUS_MM * spd * curvature * 0.5 * 0.000001;
 
 	// 左右の速度差から目標値を設定
-	r_spd = (spd + diff_v) + 0.5;
-	l_spd = (spd - diff_v) + 0.5;
+	r_spd = (spd + diff_v);
+	l_spd = (spd - diff_v);
 
 	// 移動に必要な時間[s] (= [mm]/[mm/s])
-	float req_time = ((float)distance) / velocity;
+	float req_time = ((velocity==0) ? 0 : ((float)distance) / velocity);
 	// 移動に必要な制御回数[cycle]
 	req_time *= CYCLE_PER_SEC;
 
 	// 動作単位を記録
 	mu.r_spd = r_spd;
 	mu.l_spd = l_spd;
-	mu.cycle = req_time + 0.5;
+	mu.cycle = req_time;
+	// サイクル数の正規化
+	mu.cycle = abs(mu.cycle);
 
 	// まずはキューをクリア
 	clear_queue();
@@ -137,13 +145,13 @@ void move_to_pole(PoleCood pc, int velocity) {
 	// 速度方向(+/-)
 	int8_t spd_sign = (velocity>0) - (velocity<0);
 	// 速度([mm/s] -> [cnt/cycle])の絶対値
-	int16_t spd_abs = velocity * CNT_PER_MM * SEC_PER_CYCLE * spd_sign + 0.5;
+	int16_t spd_abs = velocity * CNT_PER_MM * SEC_PER_CYCLE * spd_sign;
 
 	// 各移動距離(回転/直進/回転)
 	int16_t len[3];
-	len[0] = pc.phi1 / 360.0 * CIRC_CNT + 0.5;
-	len[1] = pc.distance * CNT_PER_MM + 0.5;
-	len[2] = pc.phi2 / 360.0 * CIRC_CNT + 0.5;
+	len[0] = pc.phi1 / 360.0 * CIRC_CNT;
+	len[1] = pc.distance * CNT_PER_MM;
+	len[2] = pc.phi2 / 360.0 * CIRC_CNT;
 
 	for (int phase=0; phase<3; phase++) {
 		// 進む向き
@@ -175,6 +183,60 @@ void move_to_rect(RectCood rc, int velocity) {
 	pc = rect2pole(rc);
 	// いけー
 	move_to_pole(pc, velocity);
+}
+void move_turn(int degree, enum TURN_DIRECTION turn_direction, int velocity) {
+	// この動作を表す動作単位
+	MotionUnit mu;
+
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]
+	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
+
+	// 指定された角度を進むのに必要な距離[cnt]
+	float req_distance = degree / 180.0 * CIRC_CNT;
+
+	// 動作単位を記録
+	if (turn_direction == RIGHT_TURN) {
+		mu.r_spd = 0;
+		mu.l_spd = ((degree>0)-(degree<0)) * spd * 2.0;
+	} else {
+		mu.r_spd = ((degree>0)-(degree<0)) * spd * 2.0;
+		mu.l_spd = 0;
+	}
+	mu.cycle = ((spd==0) ? 0 : req_distance / (spd * 2.0));
+	// サイクル数の正規化
+	mu.cycle = abs(mu.cycle);
+
+	// まずはキューをクリア
+	clear_queue();
+	// 動作単位をキューに追加
+	enqueue(mu);
+	// 次は強制的にキューから読み出し
+	force_to_next = true;
+	// 動作中よ
+	moving_now = true;
+}
+void move_forward(int distance, int velocity) {
+	// この動作を表す動作単位
+	MotionUnit mu;
+
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]
+	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
+
+	// 動作単位を記録
+	mu.r_spd = ((distance>0)-(distance<0)) * spd * 2.0;
+	mu.l_spd = mu.r_spd;
+	mu.cycle = ((spd==0) ? 0 : distance * CNT_PER_MM / spd);
+	// サイクル数の正規化
+	mu.cycle = abs(mu.cycle);
+
+	// まずはキューをクリア
+	clear_queue();
+	// 動作単位をキューに追加
+	enqueue(mu);
+	// 次は強制的にキューから読み出し
+	force_to_next = true;
+	// 動作中よ
+	moving_now = true;
 }
 bool is_moving() {
 	return moving_now;
@@ -277,4 +339,8 @@ MotionUnit dequeue(void) {
 }
 void clear_queue(void) {
 	dequeue_index = enqueue_index = 0;
+}
+
+static int16_t abs(int16_t num) {
+	return ((num > 0) - (num < 0)) * num;
 }
