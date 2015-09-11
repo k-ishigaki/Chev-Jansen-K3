@@ -118,7 +118,7 @@ void move(int curvature, int distance, int velocity) {
 	l_spd = (spd - diff_v);
 
 	// 移動に必要な時間[s] (= [mm]/[mm/s])
-	float req_time = ((float)distance) / velocity;
+	float req_time = ((velocity==0) ? 0 : ((float)distance) / velocity);
 	// 移動に必要な制御回数[cycle]
 	req_time *= CYCLE_PER_SEC;
 
@@ -202,7 +202,7 @@ void move_turn(int degree, enum TURN_DIRECTION turn_direction, int velocity) {
 		mu.r_spd = ((degree>0)-(degree<0)) * spd * 2.0;
 		mu.l_spd = 0;
 	}
-	mu.cycle = req_distance / (spd * 2.0);
+	mu.cycle = ((spd==0) ? 0 : req_distance / (spd * 2.0));
 	// サイクル数の正規化
 	mu.cycle = abs(mu.cycle);
 
@@ -225,7 +225,7 @@ void move_forward(int distance, int velocity) {
 	// 動作単位を記録
 	mu.r_spd = ((distance>0)-(distance<0)) * spd * 2.0;
 	mu.l_spd = mu.r_spd;
-	mu.cycle = distance * CNT_PER_MM / spd;
+	mu.cycle = ((spd==0) ? 0 : distance * CNT_PER_MM / spd);
 	// サイクル数の正規化
 	mu.cycle = abs(mu.cycle);
 
