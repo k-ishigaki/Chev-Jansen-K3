@@ -37,13 +37,6 @@ volatile bool force_to_next;
 // 動作単位実行中？
 volatile bool moving_now;
 
-/**
- * 引数で与えられた数値の絶対値を返します．
- * @param num 数値
- * @return 引数の絶対値
- */
-static int16_t abs(int16_t num);
-
 // 目標値
 // int8_t target_cnt_r = 0;
 // int8_t target_cnt_l = 0;
@@ -66,6 +59,12 @@ MotionUnit dequeue(void);
  * キューをクリアする
  */
 void clear_queue(void);
+/**
+ * 引数で与えられた数値の絶対値を返します．
+ * @param num 数値
+ * @return 引数の絶対値
+ */
+static int16_t abs(int16_t num);
 
 void init_motion() {
 	// (一応)割り込み禁止
@@ -115,8 +114,8 @@ void move(int curvature, int distance, int velocity) {
 	float diff_v = MACHINE_RADIUS_MM * spd * curvature * 0.5 * 0.000001;
 
 	// 左右の速度差から目標値を設定
-	r_spd = (spd + diff_v) + 0.5;
-	l_spd = (spd - diff_v) + 0.5;
+	r_spd = (spd + diff_v);
+	l_spd = (spd - diff_v);
 
 	// 移動に必要な時間[s] (= [mm]/[mm/s])
 	float req_time = ((float)distance) / velocity;
@@ -126,7 +125,7 @@ void move(int curvature, int distance, int velocity) {
 	// 動作単位を記録
 	mu.r_spd = r_spd;
 	mu.l_spd = l_spd;
-	mu.cycle = req_time + 0.5;
+	mu.cycle = req_time;
 
 	// まずはキューをクリア
 	clear_queue();
@@ -144,13 +143,13 @@ void move_to_pole(PoleCood pc, int velocity) {
 	// 速度方向(+/-)
 	int8_t spd_sign = (velocity>0) - (velocity<0);
 	// 速度([mm/s] -> [cnt/cycle])の絶対値
-	int16_t spd_abs = velocity * CNT_PER_MM * SEC_PER_CYCLE * spd_sign + 0.5;
+	int16_t spd_abs = velocity * CNT_PER_MM * SEC_PER_CYCLE * spd_sign;
 
 	// 各移動距離(回転/直進/回転)
 	int16_t len[3];
-	len[0] = pc.phi1 / 360.0 * CIRC_CNT + 0.5;
-	len[1] = pc.distance * CNT_PER_MM + 0.5;
-	len[2] = pc.phi2 / 360.0 * CIRC_CNT + 0.5;
+	len[0] = pc.phi1 / 360.0 * CIRC_CNT;
+	len[1] = pc.distance * CNT_PER_MM;
+	len[2] = pc.phi2 / 360.0 * CIRC_CNT;
 
 	for (int phase=0; phase<3; phase++) {
 		// 進む向き
