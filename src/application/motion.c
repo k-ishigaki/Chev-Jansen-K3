@@ -37,6 +37,13 @@ volatile bool force_to_next;
 // 動作単位実行中？
 volatile bool moving_now;
 
+/**
+ * 引数で与えられた数値の絶対値を返します．
+ * @param num 数値
+ * @return 引数の絶対値
+ */
+static int16_t abs(int16_t num);
+
 // 目標値
 // int8_t target_cnt_r = 0;
 // int8_t target_cnt_l = 0;
@@ -101,10 +108,10 @@ void move(int curvature, int distance, int velocity) {
 	int16_t r_spd;
 	int16_t l_spd;
 
-	// [mm/s] -> [cnt/s] -> [cnt/cycle]22.34181818
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]
 	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
 
-	// 左右の速度の差[cnt/cycle] (ちなみに、MACHINE_RADIUS_MM[mm], curvature[/mm])-6.649366199
+	// 左右の速度の差[cnt/cycle] (ちなみに、MACHINE_RADIUS_MM[mm], curvature[/mm])
 	float diff_v = MACHINE_RADIUS_MM * spd * curvature * 0.5 * 0.000001;
 
 	// 左右の速度差から目標値を設定
@@ -175,6 +182,60 @@ void move_to_rect(RectCood rc, int velocity) {
 	pc = rect2pole(rc);
 	// いけー
 	move_to_pole(pc, velocity);
+}
+void move_turn(int degree, enum TURN_DIRECTION turn_direction, int velocity) {
+	// この動作を表す動作単位
+	MotionUnit mu;
+
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]
+	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
+
+	// 指定された角度を進むのに必要な距離[cnt]
+	float req_distance = degree / 180.0 * CIRC_CNT;
+
+	// 動作単位を記録
+	if (turn_direction == RIGHT_TURN) {
+		mu.r_spd = 0;
+		mu.l_spd = ((degree>0)-(degree<0)) * spd * 2.0;
+	} else {
+		mu.r_spd = ((degree>0)-(degree<0)) * spd * 2.0;
+		mu.l_spd = 0;
+	}
+	mu.cycle = req_distance / (spd * 2.0);
+	// サイクル数の正規化
+	mu.cycle = abs(mu.cycle);
+
+	// まずはキューをクリア
+	clear_queue();
+	// 動作単位をキューに追加
+	enqueue(mu);
+	// 次は強制的にキューから読み出し
+	force_to_next = true;
+	// 動作中よ
+	moving_now = true;
+}
+void move_forward(int distance, int velocity) {
+	// この動作を表す動作単位
+	MotionUnit mu;
+
+	// [mm/s] -> [cnt/s] -> [cnt/cycle]
+	float spd = velocity * CNT_PER_MM * SEC_PER_CYCLE;
+
+	// 動作単位を記録
+	mu.r_spd = ((distance>0)-(distance<0)) * spd * 2.0;
+	mu.l_spd = mu.r_spd;
+	mu.cycle = distance * CNT_PER_MM / spd;
+	// サイクル数の正規化
+	mu.cycle = abs(mu.cycle);
+
+	// まずはキューをクリア
+	clear_queue();
+	// 動作単位をキューに追加
+	enqueue(mu);
+	// 次は強制的にキューから読み出し
+	force_to_next = true;
+	// 動作中よ
+	moving_now = true;
 }
 bool is_moving() {
 	return moving_now;
@@ -280,4 +341,8 @@ MotionUnit dequeue(void) {
 }
 void clear_queue(void) {
 	dequeue_index = enqueue_index = 0;
+}
+
+static int16_t abs(int16_t num) {
+	return ((num > 0) - (num < 0)) * num;
 }
