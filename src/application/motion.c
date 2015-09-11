@@ -126,6 +126,8 @@ void move(int curvature, int distance, int velocity) {
 	mu.r_spd = r_spd;
 	mu.l_spd = l_spd;
 	mu.cycle = req_time;
+	// サイクル数の正規化
+	mu.cycle = abs(mu.cycle);
 
 	// まずはキューをクリア
 	clear_queue();
