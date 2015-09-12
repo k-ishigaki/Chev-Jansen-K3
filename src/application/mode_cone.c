@@ -27,15 +27,49 @@ void mode_cone_loop(void){
 	// アーム初期化
 	init_arm();
 
+	motionTest();
+
 	for(;;){
 		//adj();
 
-		motionTest();
+
 	}
 }
 
 void motionTest(){
+	int d =450;
 
+	// アーム上にあげとく
+	set_arm_insert();
+	_delay_ms(1000);
+	// 直進
+	move(45,450, 40);
+	wait_completion();
+
+	// アーム下ろす
+	set_arm_grab();
+
+	move(0, 10, 40);
+	wait_completion();
+
+	set_arm_holdUp();
+
+	move(0, -100, 40);
+	wait_completion();
+
+//	move_to_rect()
+
+/* フィードバックなし
+	int dist_r = get_distance(CENTER_RIGHT_IR);
+	int dist_l = get_distance(CENTER_LEFT_IR);
+	while( ! ((DIST_R_near < dist_r) && ( dist_r < DIST_R_far)) &&
+		   ((DIST_L_near < dist_l) && ( dist_l < DIST_L_far)))
+
+		   if (dist_r > DIST_R_far ){
+		   	move_turn
+		   }
+	)
+*/
 }
 
 // 調整用
