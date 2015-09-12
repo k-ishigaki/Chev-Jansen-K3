@@ -17,4 +17,8 @@ void init_arm(void);
  */
 void move_arms(int, int);
 
+int get_upperArm_position(void);
+
+int get_lowerArm_position(void);
+
 #endif /* ARM_H */

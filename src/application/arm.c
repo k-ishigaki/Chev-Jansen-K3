@@ -25,7 +25,9 @@
 
 // アームの可動範囲に対応するPWMの値
 #define SERVO_UPPER_BOTTOM 5760	// 値を小さくするとアームが上がる
+
 #define SERVO_LOWER_BOTTOM 1790 // 値を大きくするとアームが上がる
+#define SERVO_LOWER_TOP 3200	// 下側アーム上げ幅の上限値
 
 
 void init_arm() {
@@ -52,16 +54,18 @@ void init_arm() {
 	SERVO_LOWER = SERVO_LOWER_BOTTOM;
 }
 
+
+
 // アームの可動範囲を制限した上でアームを動かす
 void move_arms(int arm_lower, int arm_upper) {
 	// 下側アームのPWM値を適用
 	arm_lower += SERVO_LOWER_BOTTOM; // += 1790
 
 	// 下側アームの可動範囲を制限
-	if(arm_lower < 1760){
-		arm_lower = 1760; // 来ない
-	}else if(arm_lower > 3200){
-		arm_lower = 3200;
+	if(arm_lower < SERVO_LOWER_BOTTOM){
+		arm_lower = SERVO_LOWER_BOTTOM;
+	}else if(arm_lower > SERVO_LOWER_TOP){
+		arm_lower = SERVO_LOWER_TOP;
 	}
 
 	// 上側アームのPWM値を適用
@@ -81,3 +85,10 @@ void move_arms(int arm_lower, int arm_upper) {
 	sei();
 }
 
+int get_upperArm_position(void){
+	return 0;
+}
+
+int get_lowerArm_position(void){
+	return SERVO_LOWER;
+}
