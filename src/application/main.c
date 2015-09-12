@@ -9,6 +9,10 @@
 #include "motion.h"
 #include "coordinate.h"
 #include "serial.h"
+#include "mode_avoidance.h"
+#include "line.h"
+#include "distance.h"
+
 
 int main(void)
 {
@@ -18,22 +22,13 @@ int main(void)
 
 	init_motion();
 	init_serial();
+	init_line();
+	init_distance();
 
-	PoleCood pc;
-	pc.phi1 = 90;
-	pc.distance = 200;
-	pc.phi2 = -90;
+	_delay_ms(2000);
 
-	move_to_pole(pc, 50);
-	while (is_moving()) {
-
-	}
-	move(-10000, 400, 75);
-	while (is_moving()) {
-		
-	}
-	move_to_pole(pc, 50);
-
+	move_avoidance_loop();
+	
 	for(;;){
 		/* insert your main loop code here */
 	}
