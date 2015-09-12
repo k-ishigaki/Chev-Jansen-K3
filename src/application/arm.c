@@ -86,7 +86,7 @@ void move_arms(int arm_lower, int arm_upper) {
 }
 
 int get_upperArm_position(void){
-	return get_lowerArm_position - SERVO_UPPER_BOTTOM;
+	return SERVO_UPPER_BOTTOM - SERVO_UPPER;
 }
 
 int get_lowerArm_position(void){
