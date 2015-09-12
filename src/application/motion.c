@@ -267,6 +267,9 @@ void pid_controll(int8_t cnt_r_now, int8_t cnt_l_now) {
 	// 現在実行中の動作単位
 	static MotionUnit current_mu = {0, 0, 0};
 
+	// 補償計算
+	cnt_l_now *= CNT_COMPENSATION;
+
 	// 座標計算
 	move_one_step(cnt_r_now, cnt_l_now);
 
