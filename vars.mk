@@ -18,7 +18,7 @@ INCLUDE		=
 # ブートローダを使用するとき、.hexファイルをブートローダに対応させるためのコマンド(まぁ使わんやろ)
 HEX2BLHEX	= bootloadHID
 # HIDaspxを使用するためのコマンド
-HIDSPX		= hidspx
+HIDSPX		= hidspx -d0
 
 # ソースコードが入っているディレクトリ
 SRCDIR		= $(CURDIR)/src
