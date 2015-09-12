@@ -45,7 +45,7 @@ struct VelocityConstants {
 	int DECREASE_RATE;
 };
 static const struct VelocityConstants VelocityConstants = {
-	.INITIAL       = 60,
+	.INITIAL       = 80,
 	.MAX           = 100,
 	.MIN           = 60,
 	.EDGE          = 30,
@@ -66,32 +66,29 @@ struct CurveConstants {
 	 * エッジ検出時に使用される
 	 */
 	int REVOLUTION_CURVATURE;
+	/**
+	 * 減速率[10^(-3)mm/s]
+	 * get_line_positionの絶対値に掛けて，その分減速する
+	 */
+	int DECELERATION_RATE;
 };
 static const struct CurveConstants LeftCurveConstants = {
-	.PROPORTIONAL         =  -300,
+	.PROPORTIONAL         =   300,
 	.REVOLUTION_CURVATURE = 30000,
+	.DECELERATION_RATE    =  800,
+
 };
 static const struct CurveConstants RightCurveConstants = {
-	.PROPORTIONAL         =    500,
+	.PROPORTIONAL         =    300,
 	.REVOLUTION_CURVATURE = -30000,
+	.DECELERATION_RATE    =   800,
 };
 
 
 #define DUMMY_DISTANCE  1000
-#define VELOCITY  80
-
-#define DECELERATION_RATE 1
-
-#define RIGHT_CURVATURE_RATE 500
-#define LEFT_CURVATURE_RATE  300
-
-#define RIGHT_EDGE_CURVATURE -30000
-#define LEFT_EDGE_CURVATURE   30000
-#define T_EDGE_VELOCITY        80
-#define EDGE_VELOCITY          30
 
 #define T_EDGE_DISTANCE        30
-#define EDGE_DISTANCE          10
+#define EDGE_DISTANCE          5
 
 void init_linetrace() {
 	init_motion();
@@ -100,100 +97,106 @@ void init_linetrace() {
 }
 
 void mode_linetrace() {
-	_delay_ms(10);
-	// 初回なら初期化する
-	static bool first = true;
-	if (first) {
-		init_linetrace();
-		first = false;
-	}
-	enum LineState state = get_line_state();
-	// int line = state == IN_LINE ? get_line_position : 0;
-	int line;
-	if (state == IN_LINE) {
-		line = get_line_position();
-	}
-	switch (state) {
-		case NO_LINE:
-		case T_EDGE:
-			printf("NO_LINE or T_EDGE\n");
-			move(
-					0,
-					T_EDGE_DISTANCE,
-					T_EDGE_VELOCITY);
-			while (is_moving());
-			enum LineState s = get_line_state();
-			if (s != NO_LINE && s != T_EDGE) break;
-			move(
-					0,
-					-100,
-					-T_EDGE_VELOCITY);
-			while (is_moving());
-			move(
-					0,
-					50,
-					T_EDGE_VELOCITY);
-			while (is_moving());
-			break;
-		case LEFT_EDGE:
-			printf("LEFT_EDGE\n");
-			move(
-					0,
-					T_EDGE_DISTANCE,
-					T_EDGE_VELOCITY);
-			while (is_moving());
-			while (1) {
+	while (1) {
+		_delay_ms(10);
+		// 初回なら初期化する
+		static bool first = true;
+		if (first) {
+			init_linetrace();
+			first = false;
+		}
+		enum LineState state = get_line_state();
+		// int line = state == IN_LINE ? get_line_position : 0;
+		int line;
+		if (state == IN_LINE) {
+			line = get_line_position();
+		}
+		switch (state) {
+			case NO_LINE:
+				printf("NO_LINE\n");
+				break;
+			case T_EDGE:
+				printf("T_EDGE\n");
 				move(
-						LEFT_EDGE_CURVATURE,
-						EDGE_DISTANCE,
-						EDGE_VELOCITY);
+						0,
+						T_EDGE_DISTANCE,
+						VelocityConstants.MIN);
 				while (is_moving());
-				static int count = 0;
-				if (get_line_state() == IN_LINE) {
-					count++;
-				} else {
-					count = 0;
-				}
-				if (count >= 2) break;
-			}
-			break;
-		case RIGHT_EDGE:
-			printf("RIGHT_EDGE\n");
-			move(
-					0,
-					T_EDGE_DISTANCE,
-					T_EDGE_VELOCITY);
-			while (is_moving());
-			while (1) {
+				if (get_line_state() != T_EDGE) break;
 				move(
-						RIGHT_EDGE_CURVATURE,
-						EDGE_DISTANCE,
-						EDGE_VELOCITY);
+						5000,
+						100,
+						-VelocityConstants.INITIAL);
 				while (is_moving());
-				static int count = 0;
-				if (get_line_state() == IN_LINE) {
-					count++;
-				} else {
-					count = 0;
+				move(
+						1000,
+						100,
+						VelocityConstants.INITIAL);
+				while (is_moving());
+				if (get_line_state() != T_EDGE) break;
+				return;
+				break;
+			case LEFT_EDGE:
+				printf("LEFT_EDGE\n");
+				move(
+						0,
+						T_EDGE_DISTANCE,
+						VelocityConstants.MIN);
+				while (is_moving());
+				if (get_line_state() != LEFT_EDGE) break;
+				while (1) {
+					move(
+							LeftCurveConstants.REVOLUTION_CURVATURE,
+							EDGE_DISTANCE,
+							VelocityConstants.EDGE);
+					while (is_moving());
+					static int count = 0;
+					if (get_line_state() == IN_LINE) {
+						count++;
+					} else {
+						count = 0;
+					}
+					if (count >= 4) break;
 				}
-				if (count >= 2) break;
-			}
-			break;
-		case IN_LINE:
-			printf("IN_LINE\n");
-			if (line > 0) {
+				break;
+			case RIGHT_EDGE:
+				printf("RIGHT_EDGE\n");
 				move(
-						-line * RIGHT_CURVATURE_RATE,
-						DUMMY_DISTANCE,
-						VELOCITY - abs(line) * DECELERATION_RATE);
-			} else {
-				move(
-						-line * LEFT_CURVATURE_RATE,
-						DUMMY_DISTANCE,
-						VELOCITY - abs(line) * DECELERATION_RATE);
-			}
-			break;
+						0,
+						T_EDGE_DISTANCE,
+						VelocityConstants.MIN);
+				while (is_moving());
+				if (get_line_state() != RIGHT_EDGE) break;
+				while (1) {
+					move(
+							RightCurveConstants.REVOLUTION_CURVATURE,
+							EDGE_DISTANCE,
+							VelocityConstants.EDGE);
+					while (is_moving());
+					static int count = 0;
+					if (get_line_state() == IN_LINE) {
+						count++;
+					} else {
+						count = 0;
+					}
+					if (count >= 4) break;
+				}
+				break;
+			case IN_LINE:
+				printf("IN_LINE\n");
+				if (line > 0) {
+					move(
+							-line * RightCurveConstants.PROPORTIONAL,
+							DUMMY_DISTANCE,
+							VelocityConstants.INITIAL - (long)abs(line) * RightCurveConstants.DECELERATION_RATE / 1000);
+				} else {
+					move(
+							-line * LeftCurveConstants.PROPORTIONAL,
+							DUMMY_DISTANCE,
+							VelocityConstants.INITIAL - (long)abs(line) * LeftCurveConstants.DECELERATION_RATE / 1000);
+				}
+				break;
+		}
 	}
-
 }
 
