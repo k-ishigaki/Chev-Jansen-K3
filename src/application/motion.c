@@ -184,7 +184,7 @@ void move_to_rect(RectCood rc, int velocity) {
 	// いけー
 	move_to_pole(pc, velocity);
 }
-void move_turn(int degree, enum TURN_DIRECTION turn_direction, int velocity) {
+void move_turn(int degree, enum TurnDirection turn_direction, int velocity) {
 	// この動作を表す動作単位
 	MotionUnit mu;
 

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "coordinate.h"
 
-enum TURN_DIRECTION {
+enum TurnDirection {
 	RIGHT_TURN,
 	LEFT_TURN,
 };
@@ -41,7 +41,7 @@ void move_to_rect(RectCood rc, int velocity);
  * @param turn_direction 右の車輪を停止するときはRIGHT_TURN、それ以外はLEFT_TURN
  * @param velocity 移動する速度
  */
-void move_turn(int degree, enum TURN_DIRECTION turn_direction, int velocity);
+void move_turn(int degree, enum TurnDirection turn_direction, int velocity);
 /**
  * 指定された速度と距離だけ移動します．
  * @param distance 移動する距離[mm]

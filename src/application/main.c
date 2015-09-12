@@ -31,9 +31,18 @@ int main(void)
 	move_arms(5000, 5000);
 	_delay_ms(2000);
 	move_avoidance_loop();
-	
+
 	for(;;){
 		/* insert your main loop code here */
+		// 範囲内のやつ
+		// for (int i=0; i<SIZE_OF_IRSensorID; i++) {
+		// 	// 取り敢えず距離取得し、リミットかける
+		// 	int dis = get_distance(i);
+		// 	printf("%d\t", dis);
+		// 	// distance_array[i] = limit(distance_array[i], IR_MIN, IR_MAX);
+		// }
+		// printf("\n\t");
+		// _delay_ms(500);
 	}
 
 

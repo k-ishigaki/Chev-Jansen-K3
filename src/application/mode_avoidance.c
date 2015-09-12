@@ -4,20 +4,22 @@
 #include "coordinate.h"
 #include "distance.h"
 #include "line.h"
+#include "serial.h"
 
 // 障害物との距離がこれ以下なら避ける[mm]
-#define AVOIDANCE_THRESHOLD 190
+#define AVOIDANCE_THRESHOLD 250
 // これを超えれば白い線は無い[mm]
 #define WHITE_OVER	1500
 // 開始時の座標インデックス
-#define START_CHECKPOINT 0
+#define START_CHECKPOINT 3
 // 距離センサ最大値[mm]
 #define IR_MAX	300
 #define IR_MIN	100
 
 // 避けるときの角度
-#define TURN_DEG	60
-#define FORWARD_LEN	150
+#define TURN_STEEP_DEG	60
+#define TURN_GRAND_DEG	45
+#define FORWARD_LEN	120
 
 
 // 4つのセンサのうち、一番障害物までの距離が短いセンサ
@@ -37,7 +39,6 @@ void find_obstacle(void);
  * 回避運動をします．
  */
 void avoidance_motion(void);
-int16_t limit(int16_t value, int16_t min, int16_t max);
 
 void move_avoidance_loop(void) {
 	// ラインを検知した座標に使う
@@ -86,58 +87,94 @@ void move_avoidance_loop(void) {
 	wait_completion();
 }
 void find_obstacle(void) {
+	// 閾値よりも低いセンサはtrue
+	bool th_flag[SIZE_OF_IRSensorID];
+
 	// 取り敢えず整数最大値
 	min_distance = INT16_MAX;
 
 	// 範囲内のやつ
-	int num = 0;
-
-	// 範囲内のやつ
 	for (int i=0; i<SIZE_OF_IRSensorID; i++) {
-		// 取り敢えず距離取得し、リミットかける
+		// 取り敢えず距離取得
 		distance_array[i] = get_distance(i);
-		distance_array[i] = limit(distance_array[i], IR_MIN, IR_MAX);
+
+		// 範囲？
+		th_flag[i] = (distance_array[i] < AVOIDANCE_THRESHOLD); 
 
 		if (distance_array[i] < min_distance) {
 			// 最小値更新
 			min_distance = distance_array[i];
 		}
-
-		if (distance_array[i] < IR_MAX && distance_array[i] > IR_MIN) {
-			// 暴走防止の為、範囲内のセンサ数取得
-			num ++;
-		}
 	}
 
 	// 避ける必要ある？
-	must_avoid = (min_distance < AVOIDANCE_THRESHOLD && num >1);
+	must_avoid = (
+		th_flag[LEFT_IR] ||
+		// th_flag[RIGHT_IR] ||
+		(th_flag[RIGHT_IR] && th_flag[CENTER_RIGHT_IR]) ||
+		(th_flag[CENTER_RIGHT_IR] && (th_flag[CENTER_LEFT_IR] || th_flag[RIGHT_IR])) ||
+		(th_flag[CENTER_LEFT_IR] && (th_flag[CENTER_RIGHT_IR] || th_flag[LEFT_IR]))
+		);
+
+	// 条件により障害物の位置を判断
+	if (th_flag[LEFT_IR]) {
+		min_ir = LEFT_IR;
+	} else if (th_flag[CENTER_LEFT_IR] && (th_flag[CENTER_RIGHT_IR] || th_flag[LEFT_IR])) {
+		min_ir = CENTER_LEFT_IR;
+	} else if (th_flag[CENTER_RIGHT_IR] && (th_flag[CENTER_LEFT_IR] || th_flag[RIGHT_IR])) {
+		min_ir = CENTER_RIGHT_IR;
+	} else if (th_flag[RIGHT_IR] && th_flag[CENTER_RIGHT_IR]) {
+		min_ir = RIGHT_IR;
+	}
 }
 void avoidance_motion(void) {
 	// どちらに避けるか
-	bool turnside = (((distance_array[LEFT_IR]+distance_array[CENTER_LEFT_IR])/2) < ((distance_array[RIGHT_IR]+distance_array[CENTER_RIGHT_IR])/2));
-	if (turnside) {
-		// 右よけ
-		move_turn(TURN_DEG, RIGHT_TURN, 50);
-		wait_completion();
-		move_forward(FORWARD_LEN, 50);
-		wait_completion();
-		move_turn(TURN_DEG, LEFT_TURN, 50);
-		wait_completion();
-	} else {
-		// 左よけ
-		move_turn(TURN_DEG, LEFT_TURN, 50);
-		wait_completion();
-		move_forward(FORWARD_LEN, 50);
-		wait_completion();
-		move_turn(TURN_DEG, RIGHT_TURN, 50);
-		wait_completion();
+
+	// 避ける角度
+	int avoidance_degree;
+	// 避ける方向
+	enum TurnDirection first_direction;
+	enum TurnDirection second_direction;
+
+	// 曲がる角度
+	switch (min_ir) {
+		case CENTER_LEFT_IR:
+		case CENTER_RIGHT_IR:
+			// 真ん中近くはいっぱい曲がる
+			avoidance_degree = TURN_STEEP_DEG;
+			break;
+
+		case LEFT_IR:
+		case RIGHT_IR:
+		default:
+			// 端っこ近くはゆるく曲がる
+			avoidance_degree = TURN_GRAND_DEG;
+			break;
 	}
-}
-int16_t limit(int16_t value, int16_t min, int16_t max) {
-	if (value < min) {
-		return min;
-	} else if (value > max) {
-		return max;
+
+	// 曲がる方向
+	switch (min_ir) {
+		case RIGHT_IR:
+		case CENTER_RIGHT_IR:
+			// 右側に障害物
+			first_direction = LEFT_TURN;
+			second_direction = RIGHT_TURN;
+			break;
+
+		case LEFT_IR:
+		case CENTER_LEFT_IR:
+		default:
+			// 右側に障害物
+			first_direction = RIGHT_TURN;
+			second_direction = LEFT_TURN;
+			break;
 	}
-	return value;
+
+	// 回避動作
+	move_turn(avoidance_degree, first_direction, 50);
+	wait_completion();
+	move_forward(FORWARD_LEN, 50);
+	wait_completion();
+	move_turn(avoidance_degree, second_direction, 50);
+	wait_completion();
 }
