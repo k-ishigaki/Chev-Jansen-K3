@@ -34,12 +34,12 @@ void init_arm() {
 }
 
 void move_arms(int s_main, int s_sub) {
-	s_main += Servo_Default;
+	s_main += Servo_Default; // += 1790
 	//max and min
 	if(s_main < 1760){
-		s_main = 1760;
-	}else if(s_main >4250){
-		s_main = 4250;
+		s_main = 1760; // 来ない
+	}else if(s_main >3200){
+		s_main = 3200;
 	}
 
 	s_sub = Servo1_Default - s_sub;
