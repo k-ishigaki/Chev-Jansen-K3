@@ -70,11 +70,31 @@ void init_distance() {
 // 100mm以下，200mm以上は正確に計測できません
 int get_distance(enum IRSensorID id) {
 	int ch = channels[id];
-	long result = 0;
+	int results[NUM_OF_AD_AVERAGE];
 	for (int i = 0; i < NUM_OF_AD_AVERAGE; i++ ) {
-		result += ADC_Solo(ch);
+		results[i] = ADC_Solo(ch);
 	}
-	result /= NUM_OF_AD_AVERAGE;
-	return slope[id] / result + intercept[id];
+	long result = 3000;        // 結果
+	int max_count = 0;  // 最頻出回数
+	for (int i = 0; i < NUM_OF_AD_AVERAGE; i++ ) {
+		int count = 0;   // 周辺の値の出現回数
+		int average = 0; // 最頻出値の平均
+		for (int j = 0; j < NUM_OF_AD_AVERAGE; j++) {
+			if (results[i] - 3 < results[j] &&
+					results[j] < results[i] + 3) {
+				count++;
+				average += results[j];
+			}
+		}
+		if (count >= max_count) {
+			max_count = count;
+			result = average / count;
+		}
+	}
+	long distance = (long)slope[id] / result + intercept[id];
+	if (distance < 0 || 300 < distance) {
+		return 300; // 距離が離れすぎているときは300mmを返す
+	}
+	return distance;
 }
 
