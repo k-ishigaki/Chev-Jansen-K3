@@ -4,10 +4,29 @@
 #include <avr/interrupt.h>
 #include "../peripheral/gpio.h"
 
-#define ServoSub OCR1A	//サーボ角度指定 ?~?    //書き込む手前でcliすること
-#define ServoMain OCR1B	//サーボ角度指定 ?~?	// main boad MAX3000 //1400 ~ 6200
-#define Servo1_Default 5760	//min, 5760-4870(S=2176),4300good~5150(S2=2400) MAX 4600 ~ 3600(S2=3000)
-#define Servo_Default 1790	//for main boad arm
+/*
+ * アームの稼働範囲について
+ *
+ * 下側アームは可動範囲の中で自由に動かせる
+ * 上側アームを下げすぎると下側のアームに付いている板と干渉する．
+ *
+ * 下側アームの可動範囲：
+ *  下限：ほぼ鉛直状態（歩いている時の足にぶつからない位置）
+ *  上限：ほぼ水平状態（ギヤ・側面アクリルにぶつからない位置）
+ *
+ * 上側アームの可動範囲：
+ *  下限：下側アームよりも少し上
+ *  上限：側面アクリルにぶつからない位置
+ *
+ */
+
+#define SERVO_UPPER OCR1A	//上側サーボPWM指定  //書き込む手前でcliすること
+#define SERVO_LOWER OCR1B	//下側サーボPWM指定 	// main boad MAX3000 //1400 ~ 6200
+
+// アームの可動範囲に対応するPWMの値
+#define SERVO_UPPER_BOTTOM 5760	// 値を小さくするとアームが上がる
+#define SERVO_LOWER_BOTTOM 1790 // 値を大きくするとアームが上がる
+
 
 void init_arm() {
 	const struct DigitalPin* mainPin = DigitalPins.PB2Pin(); // OC1B
@@ -29,33 +48,36 @@ void init_arm() {
 	DDRB |= 0b00000110;		//PWMPin出力設定
 
 	//サーボ設定
-	ServoSub = Servo1_Default;
-	ServoMain = Servo_Default;
+	SERVO_UPPER = SERVO_UPPER_BOTTOM;
+	SERVO_LOWER = SERVO_LOWER_BOTTOM;
 }
 
-void move_arms(int s_main, int s_sub) {
-	s_main += Servo_Default; // += 1790
-	//max and min
-	if(s_main < 1760){
-		s_main = 1760; // 来ない
-	}else if(s_main >3200){
-		s_main = 3200;
+// アームの可動範囲を制限した上でアームを動かす
+void move_arms(int arm_lower, int arm_upper) {
+	// 下側アームのPWM値を適用
+	arm_lower += SERVO_LOWER_BOTTOM; // += 1790
+
+	// 下側アームの可動範囲を制限
+	if(arm_lower < 1760){
+		arm_lower = 1760; // 来ない
+	}else if(arm_lower > 3200){
+		arm_lower = 3200;
 	}
 
-	s_sub = Servo1_Default - s_sub;
+	// 上側アームのPWM値を適用
+	arm_upper = SERVO_UPPER_BOTTOM - arm_upper;
 
-	if(s_sub > (6655 - s_main + 900)){
-		s_sub = 6655 - s_main + 900;
-		//uart_putchar('a');
-	}else if(s_sub < (6655 - s_main -100)){//-1000)){
-		s_sub = 6655 - s_main -100;
-		//uart_putchar('b');
+	// 上側アームの可動範囲を制限（範囲は下側アームの位置に依存）
+	if(arm_upper > (6655 - arm_lower + 900)){
+		arm_upper = 6655 - arm_lower + 900;
+	}else if(arm_upper < (6655 - arm_lower -100)){
+		arm_upper = 6655 - arm_lower -100;
 	}
 
-	//	Servo
+	//	Servo用レジスタにPWM値をセット
 	cli();
-		ServoSub  = s_sub;//= (Servo1_Default - (adBox[0]<<4));
-		ServoMain = s_main;// = (Servo_Default + (adBox[1]<<4));
+		SERVO_UPPER = arm_upper;//= (SERVO_UPPER_BOTTOM - (adBox[0]<<4));
+		SERVO_LOWER = arm_lower;// = (SERVO_LOWER_BOTTOM + (adBox[1]<<4));
 	sei();
 }
 
