@@ -17,8 +17,18 @@ void init_arm(void);
  */
 void move_arms(int, int);
 
+/**
+ * 上側アームのポジション（書き込み値基準）を返す
+ *
+ * 現在のPWMの値 - BOTTOM値
+ */
 int get_upperArm_position(void);
 
+/**
+ * 下側アームのポジション（書き込み値基準）を返す
+ *
+ * 現在のPWMの値 - BOTTOM値
+ */
 int get_lowerArm_position(void);
 
 #endif /* ARM_H */
