@@ -36,8 +36,8 @@ void move_one_step(int16_t cnt_r, int16_t cnt_l) {
 	delta_theta = (cnt_r - cnt_l) / (2.0 * MACHINE_RADIUS_CNT);
 
 	// 現在のxy座標計算(2倍，[cnt])
-	x_mul_2 += delta_distance * cos(theta + (delta_theta/2.0));
-	y_mul_2 += delta_distance * sin(theta + (delta_theta/2.0));
+	x_mul_2 += delta_distance * sin(theta + (delta_theta/2.0));
+	y_mul_2 += delta_distance * cos(theta + (delta_theta/2.0));
 	// 現在の角度計算([rad])
 	theta += delta_theta;
 }
