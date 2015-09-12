@@ -2,6 +2,7 @@
 #include "arm.h"
 #include "distance.h"
 #include <util/delay.h>
+#include "motion.h"
 
 // 調整用
 #include "../peripheral/adc.h"
@@ -11,23 +12,30 @@
 #define DIST_L_far   115
 #define DIST_L_near  100
 
-#define DEST_R_REL 200
-#define DEST_L_REL 200
+#define DEST_R_REL 200	//以下
+#define DEST_L_REL 200	//以下
 
 void adj(void);
+void motionTest(void);
 
 void mode_cone_loop(void){
 	InitADC();
 	init_distance();
 	init_serial();
+	init_motion();
 
 	// アーム初期化
 	init_arm();
 
 	for(;;){
-		adj();
+		//adj();
 
+		motionTest();
 	}
+}
+
+void motionTest(){
+
 }
 
 // 調整用
