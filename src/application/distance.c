@@ -74,7 +74,8 @@ int get_distance(enum IRSensorID id) {
 	for (int i = 0; i < NUM_OF_AD_AVERAGE; i++ ) {
 		results[i] = ADC_Solo(ch);
 	}
-	long result = 3000;        // 結果
+	// 最頻値を探し、その最頻値付近の値の平均をとる
+	int result = 0;     // 結果
 	int max_count = 0;  // 最頻出回数
 	for (int i = 0; i < NUM_OF_AD_AVERAGE; i++ ) {
 		int count = 0;   // 周辺の値の出現回数
