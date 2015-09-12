@@ -46,11 +46,11 @@ struct VelocityConstants {
 };
 static const struct VelocityConstants VelocityConstants = {
 	.INITIAL       = 80,
-	.MAX           = 100,
-	.MIN           = 60,
+	.MAX           = 160,
+	.MIN           = 80,
 	.EDGE          = 30,
 	.INCREASE_RATE = 100,
-	.DECREASE_RATE = 500,
+	.DECREASE_RATE = 200,
 };
 
 struct CurveConstants {
@@ -75,13 +75,13 @@ struct CurveConstants {
 static const struct CurveConstants LeftCurveConstants = {
 	.PROPORTIONAL         =   300,
 	.REVOLUTION_CURVATURE = 30000,
-	.DECELERATION_RATE    =  800,
+	.DECELERATION_RATE    =  500,
 
 };
 static const struct CurveConstants RightCurveConstants = {
 	.PROPORTIONAL         =    300,
 	.REVOLUTION_CURVATURE = -30000,
-	.DECELERATION_RATE    =   800,
+	.DECELERATION_RATE    =   500,
 };
 
 
@@ -90,10 +90,43 @@ static const struct CurveConstants RightCurveConstants = {
 #define T_EDGE_DISTANCE        30
 #define EDGE_DISTANCE          5
 
+struct Velocity {
+	void (*initialize)(void);
+	void (*decrease)(void);
+	void (*increase)(void);
+	int (*getValue)(void);
+};
+static long velocity;
+static void Velocity_initialize() {
+	velocity = (long)VelocityConstants.INITIAL * 1000;
+}
+static void Velocity_decrease() {
+	velocity -= VelocityConstants.DECREASE_RATE;
+	if (velocity < (long)VelocityConstants.MIN * 1000) {
+		velocity = (long)VelocityConstants.MIN * 1000;
+	}
+}
+static void Velocity_increase() {
+	velocity += VelocityConstants.INCREASE_RATE;
+	if (velocity > (long)VelocityConstants.MAX * 1000) {
+		velocity = (long)VelocityConstants.MAX * 1000;
+	}
+}
+static int Velocity_getValue() {
+	return velocity / 1000;
+}
+static const struct Velocity Velocity = {
+	.initialize = Velocity_initialize,
+	.decrease   = Velocity_decrease,
+	.increase   = Velocity_increase,
+	.getValue   = Velocity_getValue,
+};
+
 void init_linetrace() {
 	init_motion();
 	init_line();
 	init_serial();
+	Velocity.initialize();
 }
 
 void mode_linetrace() {
@@ -124,13 +157,13 @@ void mode_linetrace() {
 				while (is_moving());
 				if (get_line_state() != T_EDGE) break;
 				move(
-						5000,
+						2000,
 						100,
 						-VelocityConstants.INITIAL);
 				while (is_moving());
 				move(
 						1000,
-						100,
+						120,
 						VelocityConstants.INITIAL);
 				while (is_moving());
 				if (get_line_state() != T_EDGE) break;
@@ -158,6 +191,7 @@ void mode_linetrace() {
 					}
 					if (count >= 4) break;
 				}
+				Velocity.initialize();
 				break;
 			case RIGHT_EDGE:
 				printf("RIGHT_EDGE\n");
@@ -181,19 +215,25 @@ void mode_linetrace() {
 					}
 					if (count >= 4) break;
 				}
+				Velocity.initialize();
 				break;
 			case IN_LINE:
 				printf("IN_LINE\n");
+				if (abs(line) < 25) {
+					Velocity.increase();
+				} else {
+					Velocity.decrease();
+				}
 				if (line > 0) {
 					move(
 							-line * RightCurveConstants.PROPORTIONAL,
 							DUMMY_DISTANCE,
-							VelocityConstants.INITIAL - (long)abs(line) * RightCurveConstants.DECELERATION_RATE / 1000);
+							Velocity.getValue() - (long)abs(line) * RightCurveConstants.DECELERATION_RATE / 1000);
 				} else {
 					move(
 							-line * LeftCurveConstants.PROPORTIONAL,
 							DUMMY_DISTANCE,
-							VelocityConstants.INITIAL - (long)abs(line) * LeftCurveConstants.DECELERATION_RATE / 1000);
+							Velocity.getValue() - (long)abs(line) * LeftCurveConstants.DECELERATION_RATE / 1000);
 				}
 				break;
 		}
