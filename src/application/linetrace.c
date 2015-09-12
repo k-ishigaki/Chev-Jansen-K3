@@ -8,6 +8,8 @@
 #include "util/delay.h" // 制御周期調整
 #include "serial.h"     // for debug
 
+#define CURVETURE_OFFSET -1000
+
 struct VelocityConstants {
 	/**
 	 * 初期速度
@@ -46,9 +48,9 @@ struct VelocityConstants {
 };
 static const struct VelocityConstants VelocityConstants = {
 	.INITIAL       = 80,
-	.MAX           = 160,
+	.MAX           = 100,
 	.MIN           = 80,
-	.EDGE          = 30,
+	.EDGE          = 40,
 	.INCREASE_RATE = 100,
 	.DECREASE_RATE = 200,
 };
@@ -87,7 +89,7 @@ static const struct CurveConstants RightCurveConstants = {
 
 #define DUMMY_DISTANCE  1000
 
-#define T_EDGE_DISTANCE        30
+#define T_EDGE_DISTANCE        10
 #define EDGE_DISTANCE          5
 
 struct Velocity {
@@ -146,14 +148,12 @@ void mode_linetrace() {
 		}
 		switch (state) {
 			case NO_LINE:
-				printf("NO_LINE\n");
 				break;
 			case T_EDGE:
-				printf("T_EDGE\n");
 				move(
 						0,
 						T_EDGE_DISTANCE,
-						VelocityConstants.MIN);
+						Velocity.getValue());
 				while (is_moving());
 				if (get_line_state() != T_EDGE) break;
 				move(
@@ -170,7 +170,6 @@ void mode_linetrace() {
 				return;
 				break;
 			case LEFT_EDGE:
-				printf("LEFT_EDGE\n");
 				move(
 						0,
 						T_EDGE_DISTANCE,
@@ -194,7 +193,6 @@ void mode_linetrace() {
 				Velocity.initialize();
 				break;
 			case RIGHT_EDGE:
-				printf("RIGHT_EDGE\n");
 				move(
 						0,
 						T_EDGE_DISTANCE,
@@ -218,20 +216,19 @@ void mode_linetrace() {
 				Velocity.initialize();
 				break;
 			case IN_LINE:
-				printf("IN_LINE\n");
-				if (abs(line) < 25) {
+				if (abs(line) < 20) {
 					Velocity.increase();
 				} else {
 					Velocity.decrease();
 				}
 				if (line > 0) {
 					move(
-							-line * RightCurveConstants.PROPORTIONAL,
+							-line * RightCurveConstants.PROPORTIONAL + CURVETURE_OFFSET,
 							DUMMY_DISTANCE,
 							Velocity.getValue() - (long)abs(line) * RightCurveConstants.DECELERATION_RATE / 1000);
 				} else {
 					move(
-							-line * LeftCurveConstants.PROPORTIONAL,
+							-line * LeftCurveConstants.PROPORTIONAL + CURVETURE_OFFSET,
 							DUMMY_DISTANCE,
 							Velocity.getValue() - (long)abs(line) * LeftCurveConstants.DECELERATION_RATE / 1000);
 				}
