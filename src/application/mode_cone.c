@@ -6,12 +6,20 @@
 // 調整用
 #include "../peripheral/adc.h"
 #include "serial.h"
+#define DIST_R_far   160
+#define DIST_R_near  140
+#define DIST_L_far   115
+#define DIST_L_near  100
+
+#define DEST_R_REL 200
+#define DEST_L_REL 200
 
 void adj(void);
 
 void mode_cone_loop(void){
 	InitADC();
 	init_distance();
+	init_serial();
 
 	// アーム初期化
 	init_arm();
@@ -24,35 +32,38 @@ void mode_cone_loop(void){
 
 // 調整用
 void adj(void){
+
 	set_arm_insert();
 
-	int arm_l = get_lowerArm_position();// (ADC_Solo(0)<<3);
-	int arm_u = get_upperArm_position();// (ADC_Solo(1)<<3);
+	//int arm_l = get_lowerArm_position();// (ADC_Solo(0)<<3);
+	//int arm_u = get_upperArm_position();// (ADC_Solo(1)<<3);
 
 	//move_arms(arm_l, arm_u);
 
 	int dist_r = get_distance(CENTER_RIGHT_IR);
 	int dist_l = get_distance(CENTER_LEFT_IR);
 
-	printf("r:%d,\tl%d\n\r",dist_r,distl);
-/*
+	printf("r:%d,\tl%d\n\r",dist_r,dist_l);
+
+	_delay_ms(100);
+
 	set_arm_insert();
-	_delay_ms(1000);
-	printf("%d,\t%d\n\r",get_lowerArm_position(),get_upperArm_position());
+	_delay_ms(300);
+	//printf("%d,\t%d\n\r",get_lowerArm_position(),get_upperArm_position());
 
 	set_arm_grab();
-	_delay_ms(1000);
-	printf("%d,\t%d\n\r",get_lowerArm_position(),get_upperArm_position());
+	_delay_ms(300);
+	//printf("%d,\t%d\n\r",get_lowerArm_position(),get_upperArm_position());
 
 	set_arm_grab();
-	_delay_ms(1000);
+	_delay_ms(300);
 
 	set_arm_holdUp();
-	_delay_ms(1000);
+	_delay_ms(300);
 
 	set_arm_release();
-	_delay_ms(1000);
-*/
+	_delay_ms(300);
+
 }
 
 
