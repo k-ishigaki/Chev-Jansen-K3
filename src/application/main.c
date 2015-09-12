@@ -12,6 +12,7 @@
 #include "mode_avoidance.h"
 #include "line.h"
 #include "distance.h"
+#include "arm.h"
 
 
 int main(void)
@@ -24,9 +25,11 @@ int main(void)
 	init_serial();
 	init_line();
 	init_distance();
+	init_arm();
 
 	_delay_ms(2000);
-
+	move_arms(5000, 5000);
+	_delay_ms(2000);
 	move_avoidance_loop();
 	
 	for(;;){

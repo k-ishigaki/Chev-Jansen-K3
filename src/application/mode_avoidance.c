@@ -6,7 +6,7 @@
 #include "line.h"
 
 // 障害物との距離がこれ以下なら避ける[mm]
-#define AVOIDANCE_THRESHOLD 200
+#define AVOIDANCE_THRESHOLD 190
 // これを超えれば白い線は無い[mm]
 #define WHITE_OVER	1500
 // 開始時の座標インデックス
@@ -37,6 +37,7 @@ void find_obstacle(void);
  * 回避運動をします．
  */
 void avoidance_motion(void);
+int16_t limit(int16_t value, int16_t min, int16_t max);
 
 void move_avoidance_loop(void) {
 	// ラインを検知した座標に使う
@@ -131,4 +132,12 @@ void avoidance_motion(void) {
 		move_turn(TURN_DEG, RIGHT_TURN, 50);
 		wait_completion();
 	}
+}
+int16_t limit(int16_t value, int16_t min, int16_t max) {
+	if (value < min) {
+		return min;
+	} else if (value > max) {
+		return max;
+	}
+	return value;
 }
