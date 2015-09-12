@@ -85,6 +85,51 @@ void move_arms(int arm_lower, int arm_upper) {
 	sei();
 }
 
+void move_arm_upper_slow(int target){
+	int waitTime = 3;
+	int position = get_upperArm_position();			// 動作開始位置
+	int fixedPosition = get_lowerArm_position();	// 反対側は固定
+
+	if( position < target ) {
+		// 開始positionがtargetより低い時，ゆっくり上げる
+		while( position < target ){
+			_delay_ms( waitTime );
+			move_arms(fixedPosition, position);
+			position++;
+		}
+	}else if( position > target ){
+		// 開始positionがtargetより高い時，ゆっくり下ろす
+		while( position > target ){
+			_delay_ms( waitTime );
+			move_arms(fixedPosition, position);
+			position--;
+		}
+	}
+}
+
+void move_arm_lower_slow(int target){
+
+	int waitTime = 3;
+	int position = get_lowerArm_position();			// 動作開始位置
+	int fixedPosition = get_upperArm_position();	// 反対側は固定
+
+	if( position < target ) {
+		// 開始positionがtargetより低い時，ゆっくり上げる
+		while( position < target ){
+			_delay_ms( waitTime );
+			move_arms(position, fixedPosition);
+			position++;
+		}
+	}else if( position > target ){
+		// 開始positionがtargetより高い時，ゆっくり下ろす
+		while( position > target ){
+			_delay_ms( waitTime );
+			move_arms(position, fixedPosition);
+			position--;
+		}
+	}
+}
+
 int get_upperArm_position(void){
 	return SERVO_UPPER_BOTTOM - SERVO_UPPER;
 }
