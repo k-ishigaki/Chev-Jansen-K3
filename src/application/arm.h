@@ -1,6 +1,8 @@
 #ifndef ARM_H
 #define ARM_H
 
+#include <util/delay.h>
+
 /**
  * Init servo Pins for arms
  *
@@ -16,6 +18,13 @@ void init_arm(void);
  * マシンが壊れない可動範囲内で動くことが保証される．
  */
 void move_arms(int, int);
+
+/**
+ * Move an arm slowly
+ *
+ */
+void move_arm_upper_slow(int target);
+void move_arm_lower_slow(int target);
 
 /**
  * 上側アームのポジション（書き込み値基準）を返す
