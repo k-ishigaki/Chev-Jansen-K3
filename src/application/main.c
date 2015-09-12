@@ -9,6 +9,11 @@
 #include "motion.h"
 #include "coordinate.h"
 #include "serial.h"
+#include "mode_avoidance.h"
+#include "line.h"
+#include "distance.h"
+#include "arm.h"
+
 
 int main(void)
 {
@@ -18,24 +23,26 @@ int main(void)
 
 	init_motion();
 	init_serial();
+	init_line();
+	init_distance();
+	init_arm();
 
-	PoleCood pc;
-	pc.phi1 = 90;
-	pc.distance = 200;
-	pc.phi2 = -90;
-
-	move_to_pole(pc, 50);
-	while (is_moving()) {
-
-	}
-	move(-10000, 400, 75);
-	while (is_moving()) {
-		
-	}
-	move_to_pole(pc, 50);
+	_delay_ms(2000);
+	move_arms(5000, 5000);
+	_delay_ms(2000);
+	move_avoidance_loop();
 
 	for(;;){
 		/* insert your main loop code here */
+		// 範囲内のやつ
+		// for (int i=0; i<SIZE_OF_IRSensorID; i++) {
+		// 	// 取り敢えず距離取得し、リミットかける
+		// 	int dis = get_distance(i);
+		// 	printf("%d\t", dis);
+		// 	// distance_array[i] = limit(distance_array[i], IR_MIN, IR_MAX);
+		// }
+		// printf("\n\t");
+		// _delay_ms(500);
 	}
 
 
