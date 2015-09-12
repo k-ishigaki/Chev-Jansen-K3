@@ -21,7 +21,6 @@
 #define TURN_GRAND_DEG	45
 #define FORWARD_LEN	120
 
-
 // 4つのセンサのうち、一番障害物までの距離が短いセンサ
 enum IRSensorID min_ir;
 // 障害物までの距離
