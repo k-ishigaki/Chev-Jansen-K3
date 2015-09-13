@@ -131,6 +131,25 @@ void init_linetrace() {
 	Velocity.initialize();
 }
 
+void linetrace() {
+	if (abs(line) < 20) {
+		Velocity.increase();
+	} else {
+		Velocity.decrease();
+	}
+	if (line > 0) {
+		move(
+				-line * RightCurveConstants.PROPORTIONAL + CURVETURE_OFFSET,
+				DUMMY_DISTANCE,
+				Velocity.getValue() - (long)abs(line) * RightCurveConstants.DECELERATION_RATE / 1000);
+	} else {
+		move(
+				-line * LeftCurveConstants.PROPORTIONAL + CURVETURE_OFFSET,
+				DUMMY_DISTANCE,
+				Velocity.getValue() - (long)abs(line) * LeftCurveConstants.DECELERATION_RATE / 1000);
+	}
+}
+
 void mode_linetrace() {
 	while (1) {
 		_delay_ms(10);
@@ -216,22 +235,7 @@ void mode_linetrace() {
 				Velocity.initialize();
 				break;
 			case IN_LINE:
-				if (abs(line) < 20) {
-					Velocity.increase();
-				} else {
-					Velocity.decrease();
-				}
-				if (line > 0) {
-					move(
-							-line * RightCurveConstants.PROPORTIONAL + CURVETURE_OFFSET,
-							DUMMY_DISTANCE,
-							Velocity.getValue() - (long)abs(line) * RightCurveConstants.DECELERATION_RATE / 1000);
-				} else {
-					move(
-							-line * LeftCurveConstants.PROPORTIONAL + CURVETURE_OFFSET,
-							DUMMY_DISTANCE,
-							Velocity.getValue() - (long)abs(line) * LeftCurveConstants.DECELERATION_RATE / 1000);
-				}
+				linetrace();
 				break;
 		}
 	}
