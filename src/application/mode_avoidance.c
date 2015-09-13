@@ -9,7 +9,7 @@
 #include "serial.h"
 
 // 障害物との距離がこれ以下なら避ける[mm]
-#define AVOIDANCE_THRESHOLD 250
+#define AVOIDANCE_THRESHOLD 200
 // これを超えれば白い線は無い[mm]
 #define WHITE_OVER	1500
 // 開始時の座標インデックス
@@ -68,7 +68,7 @@ void print_line(void);
 void move_avoidance_loop(void) {
 	printlnstr("in_avoidance");
 
-	PoleCood pc = {500, -80, 70};
+	PoleCood pc = {300, -60, 50};
 	move_to_pole(pc, 50);
 	wait_completion();
 
