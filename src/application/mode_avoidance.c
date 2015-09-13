@@ -98,7 +98,7 @@ void find_obstacle(void) {
 		distance_array[i] = get_distance(i);
 
 		// 範囲？
-		th_flag[i] = (distance_array[i] < AVOIDANCE_THRESHOLD); 
+		th_flag[i] = (distance_array[i] < AVOIDANCE_THRESHOLD);
 
 		if (distance_array[i] < min_distance) {
 			// 最小値更新
@@ -132,8 +132,8 @@ void avoidance_motion(void) {
 	// 避ける角度
 	int avoidance_degree;
 	// 避ける方向
-	enum TurnDirection first_direction;
-	enum TurnDirection second_direction;
+	enum TURN_DIRECTION first_direction;
+	enum TURN_DIRECTION second_direction;
 
 	// 曲がる角度
 	switch (min_ir) {
