@@ -68,6 +68,10 @@ void print_line(void);
 void move_avoidance_loop(void) {
 	printlnstr("in_avoidance");
 
+	PoleCood pc = {500, -80, 70};
+	move_to_pole(pc, 50);
+	wait_completion();
+
 	// アームを動かす(上げる)
 	move_arms(5000, 5000);
 	// 少し待つ
@@ -161,8 +165,8 @@ void avoidance_motion(void) {
 	// 避ける角度
 	int avoidance_degree;
 	// 避ける方向
-	enum TurnDirection first_direction;
-	enum TurnDirection second_direction;
+	enum TURN_DIRECTION first_direction;
+	enum TURN_DIRECTION second_direction;
 
 	// 曲がる角度
 	switch (min_ir) {

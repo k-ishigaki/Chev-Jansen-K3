@@ -48,7 +48,7 @@ struct VelocityConstants {
 };
 static const struct VelocityConstants VelocityConstants = {
 	.INITIAL       = 80,
-	.MAX           = 100,
+	.MAX           = 120,
 	.MIN           = 80,
 	.EDGE          = 40,
 	.INCREASE_RATE = 100,
