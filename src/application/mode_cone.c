@@ -27,8 +27,8 @@ void mode_cone_loop(void){
 	// アーム初期化
 	init_arm();
 
-	motionTest();
-
+	//motionTest();
+	mode_appeal();
 	for(;;){
 		//adj();
 
@@ -44,7 +44,7 @@ void mode_appeal(void){
 	_delay_ms(4000);
 
 	// 5cmほど前進
-	move_forward(50, 40);
+	move_forward(20, 40);
 	wait_completion();
 
 	// アームを下げる
@@ -62,6 +62,11 @@ void mode_appeal(void){
 	// コーンを放す
 	set_arm_release();
 	_delay_ms(300);
+
+	// 最後にバックする
+	move_forward(-100, 40);
+
+
 }
 
 void motionTest(){
