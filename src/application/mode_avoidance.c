@@ -1,9 +1,11 @@
+#include <util/delay.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "motion.h"
 #include "coordinate.h"
 #include "distance.h"
 #include "line.h"
+#include "arm.h"
 #include "serial.h"
 
 // 障害物との距離がこれ以下なら避ける[mm]
@@ -16,10 +18,18 @@
 #define IR_MAX	300
 #define IR_MIN	100
 
+// 直進時速度
+#define FORWARD_SPD 50
+
 // 避けるときの角度
 #define TURN_STEEP_DEG	60
 #define TURN_GRAND_DEG	45
 #define FORWARD_LEN	120
+
+// ラインの存在履歴の保存件数
+#define LINE_HISTORY_SIZE 64
+// そのうち、何回ラインがあればラインがあると判断するか
+#define LINE_HISTORY_THRESHOLD 60
 
 // 4つのセンサのうち、一番障害物までの距離が短いセンサ
 enum IRSensorID min_ir;
@@ -30,6 +40,13 @@ bool must_avoid;
 // センサー値
 int16_t distance_array[SIZE_OF_IRSensorID];
 
+// line_history[num] が true のとき、num回目にこの関数が呼びだされたときラインを読み取った．
+bool line_history[LINE_HISTORY_SIZE];
+// ラインステータス
+enum LineState ls;
+
+PoleCood return_move = {30, 0, 90};
+
 /**
  * 距離センサを読み取り、変数{@code min_ir}と{@code min_distance}に格納します．
  */
@@ -38,19 +55,36 @@ void find_obstacle(void);
  * 回避運動をします．
  */
 void avoidance_motion(void);
+/**
+ * ラインを見つけます
+ * @param has_avoided 直前に回避運動をした場合はtrueを指定して下さい．それ以外はfalse．
+ * @return ラインがあったらtrue、それ以外はfalse
+ */
+bool find_line(bool has_avoided);
+
+void print_ir(void);
+void print_line(void);
 
 void move_avoidance_loop(void) {
-	// ラインを検知した座標に使う
-	RectCood rc;
-	// ライン復帰動作(90度旋回)
-	// PoleCood pc;
-	// ラインステータス
-	enum LineState ls;
+	printlnstr("in_avoidance");
+
+	// アームを動かす(上げる)
+	move_arms(5000, 5000);
+	// 少し待つ
+	_delay_ms(1000);
+
+	printlnstr("fin_arm");
 
 	// まずは初期位置を設定
 	set_checkpoint(START_CHECKPOINT);
 
+	printlnstr("checkpoint");
+
+
 	// 取り敢えず直進させとく．
+	move_forward(2000, 50);
+
+	printlnstr("forward");
 
 	while (1) {
 		// 障害物ある？
@@ -58,32 +92,27 @@ void move_avoidance_loop(void) {
 		if (must_avoid) {
 			// あったら避ける
 			avoidance_motion();
-		} else {// if (!is_moving()) {
+		} else if (!is_moving()) {
 			// なけりゃあ直進(距離は適当)
 			// ただし、少しでも時間短縮のため、動いてるなら(直進してるなら)そのまま
-			move_forward(250, 50);
+			move_forward(250, FORWARD_SPD);
 		}
 
 		// ライン状態取得
-		ls = get_line_state();
-		if (ls == IN_LINE) {
-			// ライン検知！
-			// 現在地取得
-			rc = get_rect_cood(START_CHECKPOINT);
-			// 白線超えてる？
-			if (rc.y > WHITE_OVER) {
-				// 超えとる！！黒ライン検知！
-				// まずは停止
-				move_forward(0, 0);
-				// そしてループから脱出
-				break;
-			}
+		if (find_line(must_avoid)) {
+			// ライン発見！！
+			break;
 		}
+		// print_line();
 	}
 
 	// 取り敢えず旋回
-	move_turn(90, LEFT_TURN, 50);
+	// move_turn(90, LEFT_TURN, 50);
+	move_to_pole(return_move, 50);
 	wait_completion();
+
+	// アームを動かす(下げる)
+	move_arms(0, 0);
 }
 void find_obstacle(void) {
 	// 閾値よりも低いセンサはtrue
@@ -176,4 +205,90 @@ void avoidance_motion(void) {
 	wait_completion();
 	move_turn(avoidance_degree, second_direction, 50);
 	wait_completion();
+}
+bool find_line(bool has_avoided) {
+	// ラインを検知した座標に使う
+	RectCood rc;
+	// find_line()関数が呼ばれた関数
+	static int num = -1;
+	// ラインを過去何回読んだか
+	int line_num = 0;
+
+	num++;
+
+	if (has_avoided || num==0) {
+		// この関数が初めて呼ばれた
+		// もしくはこの関数が呼ばれる直前に回避運動した
+		for (int i=0; i<LINE_HISTORY_SIZE; i++) {
+			line_history[i] = false;
+		}
+	}
+
+	// 現在地取得
+	rc = get_rect_cood(START_CHECKPOINT);
+	if (rc.y < WHITE_OVER) {
+		// ライン超えてない時はスルー
+		return false;
+	}
+
+	// LINEの状態を読み取る
+	ls = get_line_state();
+	// 格納
+	line_history[num%LINE_HISTORY_SIZE] = (ls == IN_LINE);
+
+	// 回数を数える
+	for (int i=0; i<LINE_HISTORY_SIZE; i++) {
+		line_num += line_history[i];
+	}
+
+	printint(line_num, 10);
+	printstr("\t");
+	printlnint(ls, 10);
+
+	return (line_num > LINE_HISTORY_THRESHOLD);
+}
+void print_ir(void) {
+	if (must_avoid) {
+		printstr("avoid\t");
+	} else {
+		printstr("     \t");
+	}
+
+	printstr("ir:");
+
+	switch (min_ir) {
+		case LEFT_IR:
+			printstr("left \t");
+			break;
+		case RIGHT_IR:
+			printstr("right\t");
+			break;
+		case CENTER_RIGHT_IR:
+			printstr("c_rig\t");
+			break;
+		case CENTER_LEFT_IR:
+			printstr("c_lef\t");
+			break;
+		default:
+			printstr("xxxxx\t");
+			break;
+	}
+
+	for (int i=0; i<SIZE_OF_IRSensorID; i++) {
+		printint(distance_array[i], 10);
+		printstr("\t");
+	}
+
+	printlnstr("");
+}
+void print_line() {
+	// ラインを過去何回読んだか
+	int line_num = 0;
+	// 回数を数える
+	for (int i=0; i<LINE_HISTORY_SIZE; i++) {
+		line_num += line_history[i];
+	}
+	printint(line_num, 10);
+	printstr("\t");
+	printlnint(ls, 10);
 }
