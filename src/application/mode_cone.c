@@ -37,7 +37,31 @@ void mode_cone_loop(void){
 }
 
 void mode_appeal(void){
+	//コーンを取れる位置にセットしておくこと．
 
+	// アームを上にあげておく
+	set_arm_insert();
+	_delay_ms(4000);
+
+	// 5cmほど前進
+	move_forward(50, 40);
+	wait_completion();
+
+	// アームを下げる
+	set_arm_grab();
+	_delay_ms(300);
+
+	// アームを上げる
+	set_arm_holdUp();
+	_delay_ms(300);
+
+	// 15cmほど前進
+	move_forward(150, 40);
+	wait_completion();
+
+	// コーンを放す
+	set_arm_release();
+	_delay_ms(300);
 }
 
 void motionTest(){
@@ -75,7 +99,7 @@ void motionTest(){
 	//wait_completion();
 
 	// 旋回
-	move_tuen(90, LEFT_TURN, 40);
+	move_turn(90, LEFT_TURN, 40);
 
 	// 直進
 	move_forward(300,40);
@@ -114,6 +138,11 @@ void adj(void){
 	printf("r:%d,\tl%d\n\r",dist_r,dist_l);
 
 	_delay_ms(100);
+	set_arm_holdUp();
+	_delay_ms(300);
+
+	set_arm_release();
+	_delay_ms(300);
 
 	set_arm_insert();
 	_delay_ms(300);
@@ -126,11 +155,6 @@ void adj(void){
 	set_arm_grab();
 	_delay_ms(300);
 
-	set_arm_holdUp();
-	_delay_ms(300);
-
-	set_arm_release();
-	_delay_ms(300);
 
 }
 
