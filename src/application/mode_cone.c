@@ -37,27 +37,49 @@ void mode_cone_loop(void){
 }
 
 void motionTest(){
-	int d =450;
+	int dist_r = get_distance(CENTER_RIGHT_IR);
+	int dist_l = get_distance(CENTER_LEFT_IR);
+
 
 	// アーム上にあげとく
 	set_arm_insert();
 	_delay_ms(1000);
-	// 直進
-	move(45,450, 40);
+
+	// 直進（ライントレース）
+	// 45cm程度進んだら左折
+
+	// 67.5cm以上直進するとコーンがある
+
+	// 60cmぐらい直進
+	move(0,600, 40);
 	wait_completion();
 
-	// アーム下ろす
+	// になるまでちょっとずつ進む
+	dist_r = get_distance(CENTER_RIGHT_IR);
+	dist_l = get_distance(CENTER_LEFT_IR);
+
+
+
+	// 掴む
 	set_arm_grab();
 
-	move(0, 10, 40);
-	wait_completion();
-
+	// 持ち上げる
 	set_arm_holdUp();
 
-	move(0, -100, 40);
-	wait_completion();
+	// 後ろに下がる？
+	//move(0, -100, 40);
+	//wait_completion();
 
-//	move_to_rect()
+	// 旋回
+	move_tuen(90, LEFT_TURN, 40);
+
+	// 直進
+	move_forward(300,40);
+
+	// ちょっと探してみる
+
+	// 下ろす
+
 
 /* フィードバックなし
 	int dist_r = get_distance(CENTER_RIGHT_IR);
