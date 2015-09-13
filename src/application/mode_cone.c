@@ -36,6 +36,10 @@ void mode_cone_loop(void){
 	}
 }
 
+void mode_appeal(void){
+
+}
+
 void motionTest(){
 	int dist_r = get_distance(CENTER_RIGHT_IR);
 	int dist_l = get_distance(CENTER_LEFT_IR);

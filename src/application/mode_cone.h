@@ -1,5 +1,5 @@
 #ifndef MODE_CONE_H
-#define MODE_CONE_H
+#define MODE_CONE_
 
 // アーム位置
 #define ARM_L_POSITION_INSERT  0	// コーンをセットできる位置
@@ -10,7 +10,7 @@
 #define ARM_U_POSITION_RELEASE 1100 // 離す位置（Lowerより先にこの値に）
 
 void mode_cone_loop(void);
-
+void mode_appeal(void);
 
 /**
  * コーンをすくい上げるポジションにセット
