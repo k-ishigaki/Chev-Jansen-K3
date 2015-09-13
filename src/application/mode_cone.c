@@ -27,10 +27,10 @@ void mode_cone_loop(void){
 	// アーム初期化
 	init_arm();
 
-	move_turn(90, LEFT_TURN, 40);
-	wait_completion();
+	//move_turn(90, LEFT_TURN, 40);
+	//wait_completion();
 
-	//motionTest();
+	motionTest();
 	//mode_appeal_loop();
 	for(;;){
 		//adj();
@@ -103,12 +103,14 @@ void motionTest(){
 	// 67.5cm以上直進するとコーンがある
 
 	// 60cmぐらい直進
-	move(0,600, 40);
+	move_forward(600, 40);
 	wait_completion();
 
 	// になるまでちょっとずつ進む
-	dist_r = get_distance(CENTER_RIGHT_IR);
-	dist_l = get_distance(CENTER_LEFT_IR);
+	//dist_r = get_distance(CENTER_RIGHT_IR);
+	//dist_l = get_distance(CENTER_LEFT_IR);
+	move_forward(68, 40);
+	wait_completion();
 
 
 
@@ -123,15 +125,32 @@ void motionTest(){
 	//wait_completion();
 
 	// 旋回
-	move_turn(90, LEFT_TURN, 40);
+	move_turn(100, LEFT_TURN, 40);
+	wait_completion();
+
 
 	// 直進
 	move_forward(300,40);
+	wait_completion();
 
 	// ちょっと探してみる
 
 	// 下ろす
 
+	// 15cmほど前進
+	move_forward(150, 40);
+	wait_completion();
+
+	// コーンを放す
+	set_arm_release();
+	_delay_ms(300);
+
+	// 最後にバックする
+	move_forward(-100, 40);
+	wait_completion();
+
+	// アームを上にあげておく
+	set_arm_insert();
 
 /* フィードバックなし
 	int dist_r = get_distance(CENTER_RIGHT_IR);
