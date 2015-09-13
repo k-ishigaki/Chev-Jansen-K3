@@ -76,6 +76,10 @@ void mode_appeal_loop(void){
 
 	// 最後にバックする
 	move_forward(-100, 40);
+	wait_completion();
+
+	// アームを上にあげておく
+	set_arm_insert();
 
 
 }

@@ -24,12 +24,13 @@ int main(void)
 
 	InitADC();
 
+	mode_appeal_loop();
 
 //	for(;;){
 	while(1){
 		/* insert your main loop code here */
 
-		mode_cone_loop();
+		//mode_cone_loop();
 	}
 
 
