@@ -27,8 +27,11 @@ void mode_cone_loop(void){
 	// アーム初期化
 	init_arm();
 
+	move_turn(90, LEFT_TURN, 40);
+	wait_completion();
+
 	//motionTest();
-	mode_appeal();
+	//mode_appeal_loop();
 	for(;;){
 		//adj();
 
@@ -36,7 +39,15 @@ void mode_cone_loop(void){
 	}
 }
 
-void mode_appeal(void){
+void mode_appeal_loop(void){
+	InitADC();
+	init_distance();
+	init_serial();
+	init_motion();
+
+	// アーム初期化
+	init_arm();
+
 	//コーンを取れる位置にセットしておくこと．
 
 	// アームを上にあげておく
@@ -80,6 +91,10 @@ void motionTest(){
 
 	// 直進（ライントレース）
 	// 45cm程度進んだら左折
+	move_forward(450,50);
+	wait_completion();
+	move_turn(90, LEFT_TURN, 40);
+	wait_completion();
 
 	// 67.5cm以上直進するとコーンがある
 
