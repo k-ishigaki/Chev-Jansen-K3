@@ -25,7 +25,6 @@ int main(void)
 	init_motion();
 	init_serial();
 
-	_delay_ms(1000);
 
 	// jumper1(miso) jumper2(mosi)
 	// x x line1
@@ -34,6 +33,10 @@ int main(void)
 	// o o corn
 	enum ModeStatus ms = get_mode();
 
+	while (true) {
+		move(0, 10000, 120);
+		_delay_ms(100);
+	}
 	if (ms == LINE_TRACE_1) {
 		mode_linetrace();
 		move_avoidance_loop();

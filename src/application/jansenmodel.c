@@ -7,6 +7,7 @@ int16_t y_mul_2;
 // 基準からの角度[Rad]．
 float theta;
 
+#define COOD_LIST_SIZE 10
 // 仮原点を記録するための配列
 RectCood cood_array[COOD_LIST_SIZE];
 

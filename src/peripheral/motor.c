@@ -5,34 +5,31 @@
 // モータ制御に使用するピン
 #define motorR_PIN PB0
 #define motorL_PIN PD7
-// モータPWM値を代入するレジスタ(0~255，後はマイコンのモジュールが処理してくれる)
-// #define motorR_spd OCR0A
-// #define motorL_spd OCR0B
 // 回転方向設定
 #define R_FORWARD PORTB|=_BV(motorR_PIN)	//右脚前進回転方向
 #define L_FORWARD PORTD|=_BV(motorL_PIN)	//左脚前進回転方向
 #define R_BACK PORTB&=~_BV(motorR_PIN)		//右脚後進回転方向
 #define L_BACK PORTD&=~_BV(motorL_PIN)		//左脚後進回転方向
-// PID制御周期定数，(T2OVF_NUM_MAX * 13)mSec周期でPID制御
-#define T2OVF_NUM_MAX 4
+// PID制御周期定数，((T2OVF_NUM_MAX + 1)* 13)mSec周期でPID制御
+#define T2OVF_NUM_MAX 7
 
 // ロータリエンコーダカウント値
-volatile int8_t motorR_cnt=0;
-volatile int8_t motorL_cnt=0;
+volatile int motorR_cnt=0;
+volatile int motorL_cnt=0;
 // 現在正転/逆転
 volatile bool motorR_dir = true;
 volatile bool motorL_dir = true;
-// 現在停止中華
+// 現在停止中か
 volatile bool motorR_stop = true;
 volatile bool motorL_stop = true;
 // Timer2割り込みのたびに呼び出す関数のポインタ，引数は右左のロータリエンコーダの値
-void (*t2intr_callback)(int8_t, int8_t);
+void (*t2intr_callback)(int, int);
 
 static int16_t limit(int16_t value, int16_t min, int16_t max);
 
 void init_timer0() {
 	TCCR0A = 0b11110011;	//反転動作, 8ビット高速PWM動作, TOP:0xFF
-	TCCR0B = 0b00000101;	//8ビット高速PWM動作, 8分周(約19kHz,0.1msec周期)
+	TCCR0B = 0b00000101;	//8ビット高速PWM動作, 1024分周
 	TIFR0 = 0;	//割り込みなし要求フラグリセット
 	TIMSK0 = 0;	//割り込みなし
 
@@ -40,7 +37,7 @@ void init_timer0() {
 }
 void init_timer2() {
 	TCCR2A = 0b00000000;	//TOP: OVF
-	TCCR2B = 0b00000111;	//1024分周（約13msec,76.3Hz割り込み）
+	TCCR2B = 0b00000111;	//1024分周（約13msec,約76.3Hz割り込み）
 	TIMSK2 = 0b00000001;	//OVF割り込みのみ許可
 	TIFR2  = 0;
 }
@@ -50,7 +47,7 @@ void init_intr() {
 	DDRD &= ~_BV(PD2);
 	DDRD &= ~_BV(PD3);
 }
-void set_t2intr_callback(void (*f)(int8_t, int8_t)) {
+void set_t2intr_callback(void (*f)(int, int)) {
 	t2intr_callback = f;
 }
 void set_motor_pwm(int16_t r_pwm, int16_t l_pwm) {
@@ -120,10 +117,10 @@ ISR(TIMER2_OVF_vect) {
 	// 割り込み回数カウントに使用
 	static uint8_t T2OVF_cnt = 0;
 
-	if(T2OVF_cnt<T2OVF_NUM_MAX){
+	if (T2OVF_cnt<T2OVF_NUM_MAX) {
 		// 割り込みカウンタインクリメント
 		T2OVF_cnt++;
-	}else{
+	} else {
 		// 割り込みカウンタリセット
 		T2OVF_cnt=0;
 		// 指定された関数呼び出し

@@ -26,7 +26,7 @@ void adj(void){
 	int arm_l = get_lowerArm_position();// (ADC_Solo(0)<<3);
 	int arm_u = get_upperArm_position();// (ADC_Solo(1)<<3);
 
-	//move_arms(arm_l, arm_u);
+	move_arms(arm_l, arm_u);
 
 
 	set_arm_insert();
